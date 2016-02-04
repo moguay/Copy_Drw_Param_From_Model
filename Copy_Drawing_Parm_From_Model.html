@@ -1,0 +1,294 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<!--
+	Version 0.3
+	0.1: Creation of Pro/Program
+	0.2: Rewrite of javascript
+		- Stop writing Pro/Program, set values instead
+		- Automatic values writing in case of one model in the drawing
+	0.3: Add icon to listed models to have visual type of models
+ -->
+<head>
+	<title>Drawing Params</title>
+	<style>
+	.asm {
+		list-style-image : url(http://pfrxiri10.fr.schneider-electric.com/MDM/wt/clients/images/proe/asm_image.gif);
+	}
+	.prt {
+		list-style-image : url(http://pfrxiri10.fr.schneider-electric.com/MDM/wt/clients/images/proe/prt_image.gif);
+	}
+
+	body {
+		font-family: Verdana;
+		background-color: #E7E9E0;
+		width: 100%;
+	}
+	#header{
+		background-color: #009530;
+		font-size: 1em;
+		width: 100%;
+		height: 85px;
+		color: white;
+		padding: 0.5em;
+		background-image: url(http://pfrxiri10.fr.schneider-electric.com/MDM/netmarkets/images/logoPDML.gif);
+		background-repeat: no-repeat;
+		padding-bottom: 2px;
+		position: relative;
+	}
+	#header-content {
+		position: absolute;
+		bottom: 0;
+		left: 20px;
+	}
+	.header-title {
+	}
+	li {
+		display : list-item;
+
+	}
+	.warning {
+		color: red;
+	}
+	div.warning {
+		border : solid red 1px;
+		padding: 1em;
+	}
+	a:hover {
+		background-color: #009530;
+		color: white;
+	}
+	#warning {
+	width: 100%;
+	height:2em;
+	}
+	</style>
+</head>
+<!-- <script type="text/javascript" src="json2.js"></script> -->
+<body>
+<div id="header">
+	<div id="header-content">Drawing Parameters</div>
+</div>
+<div id="application">
+	<span>Application to:</span>
+	<ul>
+		<li>List the models in the drawing</li>
+		<li>Write drawing parameters to ensure drw parameters equal selected 3D model parameters</li>
+	</ul>
+</div>
+<div id="warning" class="warning"></div>
+<div id="UI"></div>
+	<script>
+    //By
+    var ByParams = new Array("SE_DESIGNER","SE_APPROVER");
+    var ByValue = new Array("VMN","BMA");
+    //Project
+    var ProjectParams = new Array("SE_PROJECT");
+    var ProjectValue = new Array("GALAXY VL");
+
+	//Set up list of Params
+	//var ReqParams = new Array("SE_REVISION","SE_DESCRIPTION_LOCAL","SE_DESCRIPTION_ENGLISH","SE_PROJECT","PDM_SERVER","SE_DATE","SE_DESIGNER","SE_APPROVER","SE_NOTE");
+	var ReqParams = new Array("SE_REVISION","SE_DESCRIPTION_LOCAL","SE_DESCRIPTION_ENGLISH","SE_PROJECT","PDM_SERVER","SE_NOTE");
+
+	//Initialization Commands
+	var mGlob = pfcCreate("MpfcCOMGlobal");
+	var oSession = mGlob.GetProESession();
+	//This gets the drawing
+	var Dwg = oSession.CurrentModel;
+	//This variable hold list of drawing models
+	var DwgModels;
+	//Note users may try to use this application outside
+	//of it's context; you need to check the input
+	if (Dwg.Descr.Type == pfcCreate("pfcModelType").MDL_DRAWING) {
+	//Create list of all models on drawing
+		DwgModels = Dwg.ListModels();
+		//Build set of links to click
+		var Output = "";
+		var modelType = "";
+
+		//By
+        Dwg.GetParam(ByParams[0]).Value = pfcCreate("MpfcModelItem").CreateStringParamValue(ByValue[0]);
+		if (Dwg.GetParam(ByParams[1]).Value.StringValue == false ) { Dwg.GetParam(ByParams[1]).Value = pfcCreate("MpfcModelItem").CreateStringParamValue(ByValue[1]); }
+
+		//Date
+		var DateParams = new Array("SE_DATE");
+		if (Dwg.GetParam(DateParams[0]).Value.StringValue == false ) {
+			var Today = new Date();
+			var Today = (Today.getDate() < 10 ? '0' : '') +  Today.getDate() + "/" + (Today.getMonth() + 1 < 10 ? '0' : '') + (Today.getMonth() + 1) + "/" + Today.getFullYear();
+			Dwg.GetParam(DateParams[0]).Value = pfcCreate("MpfcModelItem").CreateStringParamValue(Today);
+		}
+
+        //Tolerance
+        var Material = DwgModels.Item(0).GetParam("SE_MATERIAL_1").Value.StringValue;
+        var Name = DwgModels.Item(0).InstanceName;
+        // ARTICLE TYPE 880 || COPPER ALU || COPPER CU 250 || COPPER CU 240
+        if (Name.indexOf("880-") || Material.indexOf("1CPR011961") || Material.indexOf("HUA10488") || Material.indexOf("1CPR013231") ) {
+            var RevParams = new Array("SE_TOLERANCING","SE_GENERAL_TOL");
+            var RevValue = new Array("0S-GTS-BUSBARS","");
+            Dwg.GetParam(RevParams[0]).Value = pfcCreate("MpfcModelItem").CreateStringParamValue(RevValue[0]);
+            Dwg.GetParam(RevParams[1]).Value = pfcCreate("MpfcModelItem").CreateStringParamValue(RevValue[1]);
+        // ARTICLE TYPE 870 || GALVA || EZ || ALU || STAINLESS
+        } else if (Name.indexOf("870-") || Material.indexOf("HUA10316") || Material.indexOf("1STE010897") || Material.indexOf("HUA12808") || Material.indexOf("1STE009949")) {
+            var RevParams = new Array("SE_TOLERANCING","SE_GENERAL_TOL");
+            var RevValue = new Array("0S-GTS-SHEETM","");
+            Dwg.GetParam(RevParams[0]).Value = pfcCreate("MpfcModelItem").CreateStringParamValue(RevValue[0]);
+            Dwg.GetParam(RevParams[1]).Value = pfcCreate("MpfcModelItem").CreateStringParamValue(RevValue[1]);
+        // ARTICLE TYPE 876 || PC || PVC || PMMA || MAKROLON
+        } else if (Name.indexOf("876-") || Material.indexOf("1TPM009040") || Material.indexOf("HUA35575") || Material.indexOf("1TPM006917") || Material.indexOf("HUA19947")) {
+            var RevParams = new Array("SE_TOLERANCING","SE_GENERAL_TOL");
+            var RevValue = new Array("0S-GTS-PASTSHEET","");
+            Dwg.GetParam(RevParams[0]).Value = pfcCreate("MpfcModelItem").CreateStringParamValue(RevValue[0]);
+            Dwg.GetParam(RevParams[1]).Value = pfcCreate("MpfcModelItem").CreateStringParamValue(RevValue[1]);
+        }
+
+ 		//if (DwgModels.Count == 1) {
+			document.getElementById("warning").innerHTML = "One model listed copying model parameters";
+			document.getElementById("warning").style.border = "solid black 1px";
+			document.getElementById("warning").style.color = "black";
+			writeValues(0);
+
+        //Project
+        var ProjectParams = new Array("SE_PROJECT");
+        var ProjectValue = new Array("GALAXY VL");
+        if (Dwg.GetParam(ProjectParams[0]).Value.StringValue == false ) {
+            DwgModels.Item(0).GetParam(ProjectParams[0]).Value =    pfcCreate("MpfcModelItem").CreateStringParamValue(ProjectValue[0]);
+            Dwg.GetParam(ProjectParams[0]).Value =                  pfcCreate("MpfcModelItem").CreateStringParamValue(ProjectValue[0]);
+        }
+    
+        //Rev
+		var RevParams = new Array("SE_REVISION");
+		var RevValue = new Array("01");
+        if (Dwg.GetParam(RevParams[0]).Value.StringValue == false ) {
+            DwgModels.Item(0).GetParam(RevParams[0]).Value =        pfcCreate("MpfcModelItem").CreateStringParamValue(RevValue[0]);
+            Dwg.GetParam(RevParams[0]).Value =                      pfcCreate("MpfcModelItem").CreateStringParamValue(RevValue[0]);
+        }
+        
+        //PDM Server non Symphony
+		var PdmParams = new Array("PDM_SERVER");
+		var PdmValue = new Array("none");
+        if (Dwg.GetParam(PdmParams[0]).Value.StringValue == false ) {
+            DwgModels.Item(0).GetParam(PdmParams[0]).Value =        pfcCreate("MpfcModelItem").CreateStringParamValue(PdmValue[0]);
+            Dwg.GetParam(PdmParams[0]).Value =                      pfcCreate("MpfcModelItem").CreateStringParamValue(PdmValue[0]);
+        }
+        
+		/*
+		} else {
+			document.getElementById("UI").innerHTML = "Click appropriate <B>Dwg Model</B> below to construct program:";
+			document.getElementById("warning").innerHTML =  DwgModels.Count + " models found in the drawing. Not compliant with PIM rules";
+			for (i=0;i<DwgModels.Count;i++) {
+				if (DwgModels.Item(i).Descr.Type == pfcCreate("pfcModelType").MDL_PART) {
+					modelType = "prt";
+				} else {
+					modelType = "asm";
+				}
+
+				Output += "<li class=\"" + modelType + "\">&nbsp;<a  href=\"#\" onClick=\"writeValues(" + i + ")\">" + DwgModels.Item(i).InstanceName + " </a></li>";
+			}
+		}
+		*/
+
+        //var ProjParams = new Array("SE_PROJECT");
+		//var ProjValue = new Array("GALAXY VL");
+		//if (Dwg.GetParam(ProjParams[0]).Value.StringValue == false ) { Dwg.GetParam(ProjParams[0]).Value = pfcCreate("MpfcModelItem").CreateStringParamValue(ProjValue[0]); }
+
+        //DwgModels.Item(0).GetParam("SE_PROJECT").Value = pfcCreate("MpfcModelItem").CreateStringParamValue("GALAXY VL");
+        //Dwg.GetParam("SE_PROJECT").Value = pfcCreate("MpfcModelItem").CreateStringParamValue("GALAXY VL");
+
+		Output += "</ul>";
+		//Refresh UI
+		document.getElementById("UI").innerHTML += Output;
+	} else {
+	//Inform user of problem
+		warning.innerHTML="YOU CAN ONLY RUN THIS APPLICATION ON A DRAWING";
+	}
+	//Program Functions
+	//-----------------
+	function writeValues(i) {
+		for (k=0;k<ReqParams.length;k++) {
+			Dwg.GetParam(ReqParams[k]).Value = DwgModels.Item(i).GetParam(ReqParams[k]).Value;
+		}
+		document.getElementById("application").style.display = "none";
+		document.getElementById("warning").style.display = "none";
+		document.getElementById("UI").innerHTML = "Done !<br />" + DwgModels.Item(i).InstanceName + " : Parameters values copied";
+		oSession.RunMacro("~ Command `ProCmdDwgTblRegUpd`");
+	}
+	//Main function
+	function pfcIsWindows () {
+		if (navigator.appName.indexOf ("Microsoft") != -1) {
+			return true;
+		} else {
+		return false;
+		}
+	}
+	function pfcCreate (className)	{
+		if (!pfcIsWindows()) {
+			netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+		}
+		if (pfcIsWindows()) {
+			return new ActiveXObject ("pfc."+className);
+		} else {
+			ret = Components.classes ["@ptc.com/pfc/" + className + ";1"].createInstance();
+			return ret;
+		}
+	}
+	//Utility Functions
+	function CreateParamValue(typeAsString,val)
+	{
+		switch (typeAsString)
+		{
+			case "STRING":
+			return pfcCreate("MpfcModelItem").CreateStringParamValue(val);
+			break;
+			case "NUMBER":
+			return pfcCreate("MpfcModelItem").CreateDoubleParamValue(val);
+			break;
+			case "BOOLEAN":
+			return pfcCreate("MpfcModelItem").CreateBoolParamValue(val);
+			break;
+			case "INTEGER":
+			return pfcCreate("MpfcModelItem").CreateIntParamValue(val);
+			break;
+		}
+	}
+	function pfcCreate (className)
+	{
+		if (!pfcIsWindows())
+		netscape.security.PrivilegeManager.enablePrivilege
+		("UniversalXPConnect");
+		if (pfcIsWindows())
+		return new ActiveXObject ("pfc."+className);
+		else
+		{
+		ret = Components.classes ["@ptc.com/pfc/" +
+		className + ";1"].createInstance();
+		return ret;
+		}
+	}
+	/*====================================================================*\
+	FUNCTION: createParamValueFromString
+	PURPOSE:  Parses a string into a pfcParamValue object, checking for most
+			restrictive possible type to use.
+	\*====================================================================*/
+	function createParamValueFromString (s /* string */)
+	{
+	  if (s.indexOf (".") == -1)
+		{
+		  var i = parseInt (s);
+		  if (!isNaN(i))
+		return pfcCreate ("MpfcModelItem").CreateIntParamValue(i);
+		}
+	  else
+		{
+		  var d = parseFloat (s);
+		  if (!isNaN(d))
+		return pfcCreate ("MpfcModelItem").CreateDoubleParamValue(d);
+		}
+	  if (s.toUpperCase() == "Y" || s.toUpperCase ()== "TRUE")
+		return pfcCreate ("MpfcModelItem").CreateBoolParamValue(true);
+
+	  if (s.toUpperCase() == "N" || s.toUpperCase ()== "FALSE")
+		return pfcCreate ("MpfcModelItem").CreateBoolParamValue(false);
+
+	  return pfcCreate ("MpfcModelItem").CreateStringParamValue(s);
+	}
+</script>
+</body>
+</html>
