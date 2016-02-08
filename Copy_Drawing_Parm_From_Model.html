@@ -82,22 +82,10 @@
     //By
     var ByParams = new Array("SE_DESIGNER","SE_APPROVER");
     var ByValue = new Array("VMN","BMA");
-    //Project
-    var ProjectParams = new Array("SE_PROJECT");
-    var ProjectValue = new Array("GALAXY VL");
-    //START REVISION
-	var RevParams = new Array("SE_REVISION");
-	var RevValue = new Array("01");
-    var RevDrwValue = new Array("AA");
-    var RevPartValue = new Array("01");
-    //DEFAULT PDM Server for non Symphony
-	var PdmParams = new Array("PDM_SERVER");
-	var PdmValue = new Array("none");
 
 	//Set up list of Params
-	//var ReqParams = new Array("SE_REVISION","SE_DESCRIPTION_LOCAL","SE_DESCRIPTION_ENGLISH","SE_PROJECT","PDM_SERVER","SE_DATE","SE_DESIGNER","SE_APPROVER","SE_NOTE");
 	var ReqParams = new Array("SE_REVISION" ,"SE_DESCRIPTION_LOCAL" ,"SE_DESCRIPTION_ENGLISH"   ,"SE_PROJECT"   ,"PDM_SERVER"   ,"SE_NOTE"  );
-    var ReqValue =  new Array("01"          ,""                     ,""                         ,""             ,"none"         ,""         );
+    var ReqValue =  new Array("01"          ,""                     ,""                         ,"GALAXY VL"    ,"none"         ,""         );
 
 	//Initialization Commands
 	var mGlob = pfcCreate("MpfcCOMGlobal");
@@ -147,18 +135,6 @@
 
             //Synchronize all ReqParams Value
 			writeValues(0);
-
-            //Project
-            writeDefaultValue(0,ProjectParams[0],ProjectValue[0]);
-            WarningMsg(ProjectParams[0]);
-
-            //Rev
-            writeDefaultValue(0,RevParams[0],RevValue[0]);
-            WarningMsg(RevParams[0]);
-
-            //PDM Server non Symphony
-            writeDefaultValue(0,PdmParams[0],PdmValue[0]);
-            WarningMsg(PdmParams[0]);
 
             //Material
             var Material
