@@ -88,6 +88,8 @@
     //START REVISION
 	var RevParams = new Array("SE_REVISION");
 	var RevValue = new Array("01");
+    var RevDrwValue = new Array("AA");
+    var RevPartValue = new Array("01");
     //DEFAULT PDM Server for non Symphony
 	var PdmParams = new Array("PDM_SERVER");
 	var PdmValue = new Array("none");
@@ -161,86 +163,21 @@
                 Material = DwgModels.Item(0).GetParam("SE_MATERIAL_1").Value.StringValue;
                 
                 //Relalations
-                var relations = pfcCreate("stringseq");
-                var part = oSession.GetModel(DwgModels.Item(0).InstanceName,pfcCreate("pfcModelType").MDL_PART)
-                
-                relations.Append("/* Value \"condition\" in file material");
-                //part.PostRegenerationRelations = relations;
-                relations.Append("se_material_1=ptc_material_name+\"-\"+material_param(\"condition\")");
-                //part.PostRegenerationRelations = relations;
-                relations.Append("/* Value SE Density parameter with Creo Parameter");
-                //part.PostRegenerationRelations = relations;
-                relations.Append("se_density=mp_density");
-                //part.PostRegenerationRelations = relations;
-                relations.Append("/* Value SE Mass parameter with Creo Parameter");
-                //part.PostRegenerationRelations = relations;
-                relations.Append("se_mass=pro_mp_mass*1e6");
-                //part.PostRegenerationRelations = relations;
-                relations.Append("/* Value SE Volume parameter with Creo Parameter");
-                //part.PostRegenerationRelations = relations;
-                relations.Append("se_volume=pro_mp_volume/1000");
-                //part.PostRegenerationRelations = relations;
-                relations.Append("/* Value SE Surface parameter with Creo Parameter");
-                //part.PostRegenerationRelations = relations;
-                relations.Append("se_surface=pro_mp_area/100");
-                
-                part.PostRegenerationRelations = relations;
-                
+                var part = oSession.GetModel(Dwg.InstanceName,pfcCreate("pfcModelType").MDL_PART);
+                PrtRelation(part);
+
             } else if (DwgModels.Item(0).Descr.Type == pfcCreate("pfcModelType").MDL_ASSEMBLY && oSession.GetModel(DwgModels.Item(0).InstanceName,pfcCreate("pfcModelType").MDL_PART).GetParam("SE_MATERIAL_1").Value.StringValue.length) {
                 //SE_Material_1 in ASM
                 Material = oSession.GetModel(DwgModels.Item(0).InstanceName,pfcCreate("pfcModelType").MDL_PART).GetParam("SE_MATERIAL_1").Value.StringValue;
 
                 //Parent PRT Session ID
-                var SID=oSession.GetModel(DwgModels.Item(0).InstanceName,pfcCreate("pfcModelType").MDL_PART).RelationId
+                var SID=oSession.GetModel(DwgModels.Item(0).InstanceName,pfcCreate("pfcModelType").MDL_PART).RelationId;
 
                 //Relalations
-                var relations = pfcCreate("stringseq");
-                var assembly = oSession.GetModel(DwgModels.Item(0).InstanceName,pfcCreate("pfcModelType").MDL_ASSEMBLY)
-                var part = oSession.GetModel(DwgModels.Item(0).InstanceName,pfcCreate("pfcModelType").MDL_PART)
-
-                /*
-                    /* Value "condition" in file material
-                    se_material_1=ptc_material_name+"-"+material_param("condition")
-                    /* Value SE Density parameter with Creo Parameter
-                    se_density=mp_density
-                    /* Value SE Mass parameter with Creo Parameter
-                    se_mass=pro_mp_mass*1e6
-                    /* Value SE Volume parameter with Creo Parameter
-                    se_volume=pro_mp_volume/1000
-                    /* Value SE Surface parameter with Creo Parameter
-                    se_surface=pro_mp_area/100
-                */
-                
-                relations.Append("/* Value \"condition\" in file material");
-                //part.PostRegenerationRelations = relations;
-                relations.Append("se_material_1=ptc_material_name+\"-\"+material_param(\"condition\")");
-                //part.PostRegenerationRelations = relations;
-                relations.Append("/* Value SE Density parameter with Creo Parameter");
-                //part.PostRegenerationRelations = relations;
-                relations.Append("se_density=mp_density");
-                //part.PostRegenerationRelations = relations;
-
-                relations.Append("/* Value SE Mass parameter with Creo Parameter");
-                //assembly.PostRegenerationRelations = relations;
-                //part.PostRegenerationRelations = relations;
-                relations.Append("se_mass=pro_mp_mass*1e6");
-                //assembly.PostRegenerationRelations = relations;
-                //part.PostRegenerationRelations = relations;
-                relations.Append("/* Value SE Volume parameter with Creo Parameter");
-                //assembly.PostRegenerationRelations = relations;
-                //part.PostRegenerationRelations = relations;
-                relations.Append("se_volume=pro_mp_volume/1000");
-                //assembly.PostRegenerationRelations = relations;
-                //part.PostRegenerationRelations = relations;
-                relations.Append("/* Value SE Surface parameter with Creo Parameter");
-                //assembly.PostRegenerationRelations = relations;
-                //part.PostRegenerationRelations = relations;
-                relations.Append("se_surface=pro_mp_area/100");
-                
-                assembly.PostRegenerationRelations = relations;
-                part.PostRegenerationRelations = relations;
-                
-                //////
+                var part = oSession.GetModel(Dwg.InstanceName,pfcCreate("pfcModelType").MDL_PART);
+                PrtRelation(part);
+                var assembly = oSession.GetModel(DwgModels.Item(0).InstanceName,pfcCreate("pfcModelType").MDL_ASSEMBLY);
+                AsmRelation(assembly);
 
                 //ReWrite Table Function
                 var tables = Dwg.ListTables();
@@ -400,21 +337,21 @@
                     if (Dwg.GetParam(ReqParams[k]) == void null)                    { Dwg.CreateParam(ReqParams[k], createParamValueFromString("")); }
 
                     // DRW PARAM SYNC FROM SUBMODEL
-                    if (DwgModels.Item(0).GetParam(ReqParams[k]) != null) {
+                    //if (DwgModels.Item(0).GetParam(ReqParams[k]) != null) {
                         if (Dwg.GetParam(ReqParams[k]).Value.StringValue != DwgModels.Item(i).GetParam(ReqParams[k]).Value.StringValue) {
                             Dwg.GetParam(ReqParams[k]).Value = DwgModels.Item(i).GetParam(ReqParams[k]).Value;
                             Output += ReqParams[k] + " : " + Dwg.GetParam(ReqParams[k]).Value.StringValue + " (drw sync from submodel)<br />";
                         }
-                    } else {
+                    /*} else {
                         warning.innerHTML += "Parameter: " + ReqParams[k] + " is not set in <" + DwgModels.Item(0).InstanceName + ".PRT><br />";
                         document.getElementById("warning").style.border = "solid red 1px";
                         document.getElementById("warning").style.color = "red";
-                    }
+                    }*/
                 } else if (DwgModels.Item(0).Descr.Type == pfcCreate("pfcModelType").MDL_ASSEMBLY) {
                     var SubPrtModel = oSession.GetModel(DwgModels.Item(0).InstanceName,pfcCreate("pfcModelType").MDL_PART)
                     var SubAsmModel = oSession.GetModel(DwgModels.Item(0).InstanceName,pfcCreate("pfcModelType").MDL_ASSEMBLY)
                     if (SubPrtModel.InstanceName == SubAsmModel.InstanceName) {
-                        if (SubPrtModel.GetParam(ReqParams[k]) != null) {
+                        //if (SubPrtModel.GetParam(ReqParams[k]) != null) {
                             // DRW PARAM SYNC FROM PRT
                             if (SubPrtModel.GetParam(ReqParams[k]) == void null)    { SubPrtModel.CreateParam(ReqParams[k], createParamValueFromString("")); }
                             if (SubAsmModel.GetParam(ReqParams[k]) == void null)    { SubAsmModel.CreateParam(ReqParams[k], createParamValueFromString("")); }
@@ -429,17 +366,19 @@
                                 SubAsmModel.GetParam(ReqParams[k]).Value = SubPrtModel.GetParam(ReqParams[k]).Value;
                                 Output += ReqParams[k] + " : " + Dwg.GetParam(ReqParams[k]).Value.StringValue + " (asm sync from prt)<br />";
                             }
-                        } else {
+                        /*} else {
                             warning.innerHTML += "Parameter: " + ReqParams[k] + " is not set in <" + SubPrtModel.Item(0).InstanceName + ".PRT><br />";
                             document.getElementById("warning").style.border = "solid red 1px";
                             document.getElementById("warning").style.color = "red";
-                        }
+                        }*/
                     } else {
                         alert("WriteValue: not prt and asm with same name found, need to finish dev");
+                        return false;
                     }
                 }
             } else {
                 alert("WriteValue: not same name found, need to finish dev");
+                return false;
             }
 		}
 		//document.getElementById("application").style.display = "none";
@@ -785,6 +724,71 @@
       Display the note
     \*--------------------------------------------------------------------*/
      note.Show ();
+    }
+    
+    function AsmRelation(assembly) {
+        if (assembly.RelationId > -1) {
+            var Found_se_mass=0;
+            var Found_se_volume=0;
+            var Found_se_surface=0;
+        
+            for (var j=0;j<assembly.PostRegenerationRelations.Count; j++)
+            {
+                if (assembly.PostRegenerationRelations.item(j).indexOf("se_mass") > -1) Found_se_mass=1;
+                if (assembly.PostRegenerationRelations.item(j).indexOf("se_volume") > -1) Found_se_volume=1;
+                if (assembly.PostRegenerationRelations.item(j).indexOf("se_surface") > -1) Found_se_surface=1;
+            }
+        
+            if (Found_se_mass==0 || Found_se_volume==0 || Found_se_surface==0) {
+                var relations = pfcCreate("stringseq");
+                relations.Append("/* Value SE Mass parameter with Creo Parameter");
+                relations.Append("se_mass=pro_mp_mass*1e6");
+                relations.Append("/* Value SE Volume parameter with Creo Parameter");
+                relations.Append("se_volume=pro_mp_volume/1000");
+                relations.Append("/* Value SE Surface parameter with Creo Parameter");
+                relations.Append("se_surface=pro_mp_area/100");
+            
+                assembly.PostRegenerationRelations = relations;
+                assembly.RegeneratePostRegenerationRelations();
+                Output += "Relation in asm : Updated<br />";
+                //alert(Found_se_mass+" "+Found_se_volume+" "+Found_se_surface);
+            }
+        }
+    }
+    
+    function PrtRelation(part) {
+        //var part = oSession.GetModel(Dwg.InstanceName,pfcCreate("pfcModelType").MDL_PART);
+        if (part.RelationId > -1) {
+            var Found_se_material_1=0;
+            var Found_se_mass=0;
+            var Found_se_volume=0;
+            var Found_se_surface=0;
+    
+            for (var j=0;j<part.PostRegenerationRelations.Count; j++)
+            {
+                if (part.PostRegenerationRelations.item(j).indexOf("se_material_1") > -1) Found_se_material_1=1;
+                if (part.PostRegenerationRelations.item(j).indexOf("se_mass") > -1) Found_se_mass=1;
+                if (part.PostRegenerationRelations.item(j).indexOf("se_volume") > -1) Found_se_volume=1;
+                if (part.PostRegenerationRelations.item(j).indexOf("se_surface") > -1) Found_se_surface=1;
+            }
+    
+            if (Found_se_material_1==0 || Found_se_mass==0 || Found_se_volume==0 || Found_se_surface==0) {
+                var relations = pfcCreate("stringseq");
+                relations.Append("/* Value \"condition\" in file material");
+                relations.Append("se_material_1=ptc_material_name+\"-\"+material_param(\"condition\")");
+                relations.Append("/* Value SE Mass parameter with Creo Parameter");
+                relations.Append("se_mass=pro_mp_mass*1e6");
+                relations.Append("/* Value SE Volume parameter with Creo Parameter");
+                relations.Append("se_volume=pro_mp_volume/1000");
+                relations.Append("/* Value SE Surface parameter with Creo Parameter");
+                relations.Append("se_surface=pro_mp_area/100");
+                
+                part.PostRegenerationRelations = relations;
+                part.RegeneratePostRegenerationRelations();
+                Output += "Relation in prt : Updated<br />";
+                //alert(Found_se_material_1+" "+Found_se_mass+" "+Found_se_volume+" "+Found_se_surface);
+            }
+        }
     }
 </script>
 </body>
