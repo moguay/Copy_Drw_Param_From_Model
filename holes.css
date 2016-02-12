@@ -1,0 +1,47 @@
+    body {
+        font-family: Verdana;
+        font-size: 75%;
+        background-color: #E7E9E0;
+        width: 100%;
+    }
+    div.cat {
+        color: white;
+        background-color: #009530;
+        text-transform: uppercase;
+    }
+
+    div.holeInfo {
+        border-bottom: 2px solid #009530;
+        padding: 0px;
+        margin: 0px;
+		height: 28px;
+		text-align: center;
+		vertical-align: middle;
+		width: 405px;
+		min-width: 200px;
+    }
+
+	span {
+		display: block;
+        float: left;
+		width: 25%;
+		border-left: 1px solid #E0E0E0;
+	}
+	span.id, span.creation {
+        vertical-align: middle;
+		text-align: center;
+		height: 100%;
+	}
+
+    .odd {
+        background-color: #b9bab3;
+        font-size: 100%;
+    }
+	 .even {
+        font-size: 100%;
+    }
+    input {
+        border: 1px solid white;
+        width: 100px;
+    }
+	
