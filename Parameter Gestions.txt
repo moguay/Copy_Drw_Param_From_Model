@@ -1,0 +1,14 @@
+Prameter:                   Sync:           If empty:  If value:
+SE_DESIGNER                 NO              INI         INI
+SE_APPROVER                 NO              INI         MANUAL
+SE_DATE                     NO              AUTO        AUTO
+SE_REVISION drw             INI (yes/non)   INI         MANUAL
+SE_REVISION asm             YES with prt    INI         MANUAL
+SE_REVISION prt             NO              INI         MANUAL
+SE_DESCRIPTION_ENGLISH      YES             MANUAL      MANUAL
+SE_DESCRIPTION_LOCAL        YES             MANUAL      MANUAL
+SE_PROJECT                  YES             INI         MANUAL
+PDM_SERVER                  YES             INI         MANUAL
+SE_NOTE                     YES             MANUAL      MANUAL
+POST_REGEN_RELATION asm     NO              AUTO        AUTO
+POST_REGEN_RELATION prt     NO              AUTO        AUTO

@@ -6,8 +6,8 @@
     <title>Drawing Params</title>
     <link rel="stylesheet" href="CopyParam.css">
 </head>
+<script type="text/javascript" src="CopyParam_default.ini"></script>
 <script type="text/javascript" src="CopyParam.js"></script>
-<!-- <script type="text/javascript" src="UpdateParam.js"></script> -->
 <script>
     function Main()
     {
@@ -24,21 +24,21 @@
 <div id="application">
     <span>Application to:</span>
     <ul>
-        <!-- <li>List the models in the drawing</li> -->
         <li>Write drawing parameters from 3D model</li>
         <li>Write drawing standard tolerance based on the material</li>
         <li>Set some standard NON-PDM parameters</li>
     </ul>
 </div>
-<form id="updatedParameters"></form>
 <form id="ManualUpdateParameters"></form>
-<div id="warning" class="warning"></div>
-<div id="UI"></div>
+<div id="Messages" class="Messages">
+    <fieldset id="fieldset1"><legend>Warning</legend><div id="warning" class="warning"></div></fieldset>
+    <fieldset id="fieldset1"><legend>Notification processing</legend><div id="UI" class="UI"></div></fieldset>
+</div>
 </body>
 </html>
 
 <!--
 ReadOnly detection
 Provisional gestion
-
+Liste de matière interchangable
 -->
