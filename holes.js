@@ -6,7 +6,6 @@ function Main() {
 	var UI = document.getElementById("UI");
 	if (Model.Descr.Type == pfcCreate("pfcModelType").MDL_PART || Model.GetParam("SE_MATERIAL_1").Value.StringValue == "HUA17334" ) {
 		var modelHoles = Model.ListFeaturesByType (false, pfcCreate ("pfcFeatureType").FEATTYPE_HOLE);
-		Model.GetParam("SE_MATERIAL_1").Value.StringValue;
 		var textNode = document.createTextNode(modelHoles.Count + " holes found in the model to process.");
 		UI.appendChild(textNode);
 		UI.appendChild(document.createElement("br"));
