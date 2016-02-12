@@ -4,9 +4,9 @@ function Main() {
 	var oSession = mGlob.GetProESession();
 	var Model = oSession.CurrentModel;
 	var UI = document.getElementById("UI");
-	if (Model.Descr.Type == pfcCreate("pfcModelType").MDL_PART || Model.GetParam("SE_MATERIAL_1").Value.StringValue == "HUA17334" ) {
+	if (Model.Descr.Type == pfcCreate("pfcModelType").MDL_PART & Model.GetParam("SE_MATERIAL_1").Value.StringValue.substring(0, 8) == "HUA17334" ) {
 		var modelHoles = Model.ListFeaturesByType (false, pfcCreate ("pfcFeatureType").FEATTYPE_HOLE);
-		var textNode = document.createTextNode(modelHoles.Count + " holes found in the model to process.");
+		var textNode = document.createTextNode(modelHoles.Count + " holes found in the model to process and Part is a PCB Material " + Model.GetParam("SE_MATERIAL_1").Value.StringValue);
 		UI.appendChild(textNode);
 		UI.appendChild(document.createElement("br"));
 
