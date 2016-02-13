@@ -83,7 +83,7 @@
                 if (part == void null)      part = oSession.GetModel(assembly.InstanceName,pfcCreate("pfcModelType").MDL_PART);
 
                 //Table Parameters Header
-                outputTable += "<table width='100%'>";
+                outputTable += "<table>";
                 outputTable += "<thead><tr><th scope='col'>Parameters</th><th scope='col' colspan='2' rowspan='1'>values</th></tr></thead>";
                 outputTable += "<tbody>";
                 
@@ -182,7 +182,7 @@
             document.getElementById("UI").innerHTML += Output;
             
             outputTable += "</tbody></table>";
-            document.getElementById("ManualUpdateParameters").innerHTML = "<fieldset><legend>Manual Configuration - " + Dwg.InstanceName  + " : "  + oSession.GetModel(part.InstanceName,pfcCreate("pfcModelType").MDL_PART).GetParam("SE_DESCRIPTION_ENGLISH").Value.StringValue + "</legend>" + outputTable + "</fieldset>";
+            document.getElementById("ManualUpdateParameters").innerHTML = "<fieldset id='fieldset'><legend>Manual Configuration - " + Dwg.InstanceName  + " : "  + oSession.GetModel(part.InstanceName,pfcCreate("pfcModelType").MDL_PART).GetParam("SE_DESCRIPTION_ENGLISH").Value.StringValue + "</legend>" + outputTable + "</fieldset>";
 
             //Refresh Dawing Sheets,Tables,Draft and repaint
             oSession.RunMacro("~ Command `ProCmdDwgUpdateSheets`");

@@ -37,7 +37,6 @@
 
     li {
         display : list-item;
-
     }
 
     a:hover {
@@ -49,12 +48,35 @@
         padding: 10px;
         height:2em;
     }
+    
+    #fieldset {
+        display:block;
+        border:2px #999999 groove;
+        width:100%;
+        /*padding:10px;*/
+        margin-top:10px;
+        margin-left:auto;
+        margin-right:auto;
+        text-align:center;
+    }
+    
+    #fieldset1 {
+        display:block;
+        border:2px #999999 groove;
+        width:100%;
+        /*padding:10px;*/
+        margin-top:10px;
+        /*margin-left:auto;*/
+        /*margin-right:auto;*/
+        /*text-align:center;*/
+    }
+
 
     table {
-        margin: 10px;
         padding: 0px;
         border-collapse: collapse;
-        width: 80%;
+        width: 95%;
+        margin:10px auto 10px auto;
     }
 
     thead {
