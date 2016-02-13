@@ -70,9 +70,9 @@
 
     td, th {
         border-bottom: 1px solid #009530;
-        padding: 0px;
+        /*padding: 0px;
         margin: 5px;
-        width: 0%;
+        width: 0%;*/
     }
 
     .odd {
@@ -82,5 +82,13 @@
 
     input {
         border: 1px solid white;
+        /*width: 100%;*/
+    }
+    
+    #Input_Drw, #Input_Models {
+        width: 100%;
+    }
+    
+    #Input_Sync, #Input_NoSync {
         width: 100%;
     }

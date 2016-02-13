@@ -1,3 +1,6 @@
+//BUG List
+// PROE LANCER SANS LE LAUNCHER = DETECTION DU NAVIGATEUR EN mode Netscape
+
     //Provisional on=auto off=forced off
     var Provisional = "off"
     
@@ -7,20 +10,37 @@
     
     //Rev
     var RevParams = new Array("SE_REVISION");
-    var RevModelValue = new Array(DrawingRev);
+    var RevModelValue = new Array(ModelsRev);
     var RevDwgValue = new Array(DrawingRev);
     
     //list of Copy Params SETUP
     var ReqParams = new Array("SE_DESCRIPTION_ENGLISH"   ,"SE_DESCRIPTION_LOCAL"     ,"SE_PROJECT"   ,"PDM_SERVER"   ,"SE_NOTE"  );
     var ReqValue =  new Array(""                         ,""                         ,ProjectName    ,"none"         ,""         );
     
+    var Today = new Date();
+    var Today = (Today.getDate() < 10 ? '0' : '') +  Today.getDate() + "/" + (Today.getMonth() + 1 < 10 ? '0' : '') + (Today.getMonth() + 1) + "/" + Today.getFullYear();
+
+    //Params manager
+    var Params = new Array();
+    //                     SE_PARAM                  SYNC        !Value      Value      Def Drw Value   Def Model Value
+    Params[0] = new Array("SE_DESIGNER",            "nosync",   "default",  "default",  DesignerName,   "null");
+    Params[1] = new Array("SE_APPROVER",            "nosync",   "default",  "manual",   AppoverName,    "null");
+    Params[2] = new Array("SE_DATE",                "nosync",   "auto",     "auto",     Today,          "null");
+    Params[3] = new Array("SE_REVISION",            "nosync",   "default",  "manual",   DrawingRev,     ModelsRev);
+    Params[4] = new Array("SE_DESCRIPTION_ENGLISH", "sync",     "manual",   "manual",   "",             "");
+    Params[5] = new Array("SE_DESCRIPTION_LOCAL",   "sync",     "manual",   "manual",   "",             "");
+    Params[6] = new Array("SE_PROJECT",             "sync",     "default",  "manual",   ProjectName,    ProjectName);
+    Params[7] = new Array("PDM_SERVER",             "sync",     "default",  "default",  "none",         "none");
+    Params[8] = new Array("SE_NOTE",                "sync",     "manual",   "manual",   "",             "");
+    
     //Initialization Commands
     var mGlob = pfcCreate("MpfcCOMGlobal");
     var oSession = mGlob.GetProESession();
-    //This gets the drawing
-    var Asm = oSession.CurrentModel;
-    //This gets the drawing
-    var Dwg = oSession.CurrentModel;
+    var CurrentModel = oSession.CurrentModel;
+
+    //This set all current models type
+    var Asm = CurrentModel; var Prt = CurrentModel; var Dwg = CurrentModel;
+
     //This variable hold list of drawing models
     var DwgModels;
     //Note users may try to use this application outside
@@ -80,10 +100,11 @@
                 if (part == void null)      part = oSession.GetModel(assembly.InstanceName,pfcCreate("pfcModelType").MDL_PART);
 
                 //Table Parameters Header
-                outputTable += "<table>";
-                outputTable += "<thead><tr><th scope='col'>Parameters</th><th scope='col'>values</th></tr></thead>";
+                outputTable += "<table width='100%'>";
+                outputTable += "<thead><tr><th scope='col'>Parameters</th><th scope='col' colspan='2' rowspan='1'>values</th></tr></thead>";
                 outputTable += "<tbody>";
-    
+                
+                /*
                 //By
                 for (var i=0; i<ByParams.length; i++)
                 {
@@ -137,9 +158,16 @@
                     }
                     outputTable += "<tr class='" + "odd" +"'><td>" + RevParams[0] + "</td><td><input type='text' name ='" + RevParams[0] + "' value='" + assembly.GetParam(RevParams[0]).Value.StringValue + "' ></input></td></tr>";
                 }
-    
+
                 //Synchronize all ReqParams Value
                 writeValues(0);
+                */
+                
+                //Synchronize all Params Value
+                for (i=0;i<Params.length;i++)
+                {
+                    syncValues(i);
+                }
                 
                 //Relalations
                 if (part != void null)      PrtRelation(part);
@@ -166,7 +194,7 @@
                     document.getElementById("fieldset1").style.border = "2px solid red";
                     document.getElementById("warning").style.color = "red";
                 }
-                outputTable += "<tr class='" + "odd" +"'><td>" + "SE_MATERIAL_1" + "</td><td><input type='text' onChange='UpdateValue(this.name,this.value)' name ='" + "SE_MATERIAL_1" + "' value='" + Material + "' ></input></td></tr>";
+                outputTable += "<tr class='" + "odd" +"'><td>" + "SE_MATERIAL_1" + "</td><td colspan='2' rowspan='1'><input type='text' id='Input_NoSync' name ='" + "SE_MATERIAL_1" + "' value='" + Material + "' ></input></td></tr>";
                 WarningMsg("SE_MATERIAL_1");
 
                 //Tolerance
@@ -199,8 +227,8 @@
                     }
                 }
                 WarningMsg(TolParams[0]);
-                outputTable += "<tr class='" + "odd" +"'><td>" + TolParams[0] + "</td><td><input type='text' onChange='UpdateValue(this.name,this.value)' name ='" + TolParams[0] + "' value='" + Dwg.GetParam(TolParams[0]).Value.StringValue + "' ></input></td></tr>";
-                outputTable += "<tr class='" + "odd" +"'><td>" + TolParams[1] + "</td><td><input type='text' onChange='UpdateValue(this.name,this.value)' name ='" + TolParams[1] + "' value='" + Dwg.GetParam(TolParams[1]).Value.StringValue + "' ></input></td></tr>";
+                outputTable += "<tr class='" + "odd" +"'><td>" + TolParams[0] + "</td><td colspan='2' rowspan='1'><input type='text' id='Input_NoSync' onChange='UpdateValue(this.name,this.value,this.id)' name ='" + TolParams[0] + "' value='" + Dwg.GetParam(TolParams[0]).Value.StringValue + "' ></input></td></tr>";
+                outputTable += "<tr class='" + "odd" +"'><td>" + TolParams[1] + "</td><td colspan='2' rowspan='1'><input type='text' id='Input_NoSync' onChange='UpdateValue(this.name,this.value,this.id)' name ='" + TolParams[1] + "' value='" + Dwg.GetParam(TolParams[1]).Value.StringValue + "' ></input></td></tr>";
                 
                 //SE_PART_NUMBER Feat Parameter
                 if (DwgModels.Item(0).Descr.Type == pfcCreate("pfcModelType").MDL_ASSEMBLY) {
@@ -256,13 +284,94 @@
     
     //Program Functions
     //-----------------
+    function syncValues(i) {
+        //for (k=0;k<Params[i].length;k++)
+        //{
+            // alert("StartParam" + Params[i][k]);
+            if (Dwg.InstanceName.indexOf(DwgModels.Item(0).InstanceName) > -1) {
+                if (DwgModels.Item(0).Descr.Type == pfcCreate("pfcModelType").MDL_PART) {
+                    // DRW PARAM SYNC FROM MODEL
+                    var PrtModel = oSession.GetModel(DwgModels.Item(0).InstanceName,pfcCreate("pfcModelType").MDL_PART);
+            // alert("set1");
+                    //Create Parameter
+                    if (PrtModel.GetParam(Params[i][0]) == void null    && Params[i][5] != "null")  { PrtModel.CreateParam(Params[i][0], createParamValueFromString("")); }
+                    if (Dwg.GetParam(Params[i][0]) == void null         && Params[i][4] != "null")  { Dwg.CreateParam(Params[i][0], createParamValueFromString("")); }
+            // alert("set2");
+                    //Set Default Value
+                    if (Params[i][5] != "null") { if (PrtModel.GetParam(Params[i][0]).Value.StringValue.length == 0   && Params[i][5].length > 0)  { PrtModel.GetParam(Params[i][0]).Value = pfcCreate("MpfcModelItem").CreateStringParamValue(Params[i][5]);   Output += "<li>" + Params[i][0] + " : " + Params[i][5] + " (prt sync with default value)</li>"; } }
+                    if (Params[i][4] != "null") { if (Dwg.GetParam(Params[i][0]).Value.StringValue.length == 0        && Params[i][4].length > 0)  { Dwg.GetParam(Params[i][0]).Value = pfcCreate("MpfcModelItem").CreateStringParamValue(Params[i][4]);        Output += "<li>" + Params[i][0] + " : " + Params[i][4] + " (drw sync with default value)</li>"; } }
+            // alert("set3");
+                    //DRW PARAM SYNC FROM PRT
+                    if (Params[i][1] == "sync") {
+                        if (Dwg.GetParam(Params[i][0]).Value.StringValue != DwgModels.Item(0).GetParam(Params[i][0]).Value.StringValue) {
+                            Dwg.GetParam(Params[i][0]).Value = DwgModels.Item(0).GetParam(Params[i][0]).Value;
+                            Output += "<li>" + Params[i][0] + " : " + Dwg.GetParam(Params[i][0]).Value.StringValue + " (drw sync from submodel)</li>";
+                        }
+                    }
+            // alert("end");
+                } else if (DwgModels.Item(0).Descr.Type == pfcCreate("pfcModelType").MDL_ASSEMBLY) {
+                    // DRW PARAM SYNC FROM MODEL AND SUBMODEL
+                    var SubPrtModel = oSession.GetModel(DwgModels.Item(0).InstanceName,pfcCreate("pfcModelType").MDL_PART);
+                    var SubAsmModel = oSession.GetModel(DwgModels.Item(0).InstanceName,pfcCreate("pfcModelType").MDL_ASSEMBLY);
+            // alert("set1");
+                    if (SubPrtModel.InstanceName == SubAsmModel.InstanceName) {
+                        //Create Parameter
+                        if (SubPrtModel.GetParam(Params[i][0]) == void null &&  Params[i][5] != "null")     { SubPrtModel.CreateParam(Params[i][0], createParamValueFromString("")); }
+                        if (SubAsmModel.GetParam(Params[i][0]) == void null &&  Params[i][5] != "null")     { SubAsmModel.CreateParam(Params[i][0], createParamValueFromString("")); }
+                        if (Dwg.GetParam(Params[i][0]) == void null         &&  Params[i][4] != "null")     { Dwg.CreateParam(Params[i][0], createParamValueFromString("")); }
+            // alert("set2");
+                        //Set Default Value
+                        if (Params[i][5] != "null") { if (SubPrtModel.GetParam(Params[i][0]).Value.StringValue.length == 0    && Params[i][5].length > 0)  { SubPrtModel.GetParam(Params[i][0]).Value = pfcCreate("MpfcModelItem").CreateStringParamValue(Params[i][5]);    Output += "<li>" + Params[i][0] + " : " + Params[i][5] + " (prt sync with default value)</li>"; } }
+                        if (Params[i][5] != "null") { if (SubAsmModel.GetParam(Params[i][0]).Value.StringValue.length == 0    && Params[i][5].length > 0)  { SubAsmModel.GetParam(Params[i][0]).Value = pfcCreate("MpfcModelItem").CreateStringParamValue(Params[i][5]);    Output += "<li>" + Params[i][0] + " : " + Params[i][5] + " (asm sync with default value)</li>"; } }
+                        if (Params[i][4] != "null") { if (Dwg.GetParam(Params[i][0]).Value.StringValue.length == 0            && Params[i][4].length > 0)  { Dwg.GetParam(Params[i][0]).Value = pfcCreate("MpfcModelItem").CreateStringParamValue(Params[i][4]);            Output += "<li>" + Params[i][0] + " : " + Params[i][4] + " (drw sync with default value)</li>"; } }
+            // alert("set3");
+                        //DRW PARAM SYNC FROM PRT
+                        if (Params[i][1] == "sync") {
+                            if (Dwg.GetParam(Params[i][0]).Value.StringValue != SubPrtModel.GetParam(Params[i][0]).Value.StringValue) {
+                                Dwg.GetParam(Params[i][0]).Value = SubPrtModel.GetParam(Params[i][0]).Value;
+                                Output += "<li>" + Params[i][0] + " : " + Dwg.GetParam(Params[i][0]).Value.StringValue + " (drw sync from prt)</li>";
+                            }
+                        }
+            // alert("set4");
+                        //ASM PARAM SYNC FROM PRT
+                        if (Params[i][5] != "null") {
+                            if (SubAsmModel.GetParam(Params[i][0]).Value.StringValue != SubPrtModel.GetParam(Params[i][0]).Value.StringValue) {
+                                SubAsmModel.GetParam(Params[i][0]).Value = SubPrtModel.GetParam(Params[i][0]).Value;
+                                Output += "<li>" + Params[i][0] + " : " + Dwg.GetParam(Params[i][0]).Value.StringValue + " (asm sync from prt)</li>";
+                            }
+                        }
+            // alert("end");
+                    } else {
+                        warning.innerHTML += "Model and sub Model do not have the same name. Parameter need to be set manually<br />";
+                        document.getElementById("fieldset1").style.border = "2px solid red";
+                        return false;
+                    }
+                }
+            } else {
+                warning.innerHTML += "Drawing and Model do not have the same name. Parameter need to be set manually<br />";
+                document.getElementById("fieldset1").style.border = "2px solid red";
+                return false;
+            }
+            // WarningMsg(Params[i][0]);
+            // outputTable += "<tr class='" + "odd" +"'><td>" + Params[i][0] + "</td><td><input type='text' onChange='UpdateValue(this.name,this.value)' name ='" + Params[i][0] + "' value='" + Dwg.GetParam(Params[i][0]).Value.StringValue + "' ></input></td></tr>";
+        //}
+        //alert("dd");
+        WarningMsg(Params[i][0]);
+        if (Params[i][1] != "sync" && Params[i][5] != "null") {
+            outputTable += "<tr class='" + "odd" +"'><td>" + Params[i][0] + "</td><td><input type='text' id='Input_Drw' onChange='UpdateValue(this.name,this.value,this.id)' name ='" + Params[i][0] + "' value='" + Dwg.GetParam(Params[i][0]).Value.StringValue + "' ></input></td><td><input type='text' id='Input_Models' onChange='UpdateValue(this.name,this.value,this.id)' name ='" + Params[i][0] + "' value='" + oSession.GetModel(DwgModels.Item(0).InstanceName,pfcCreate("pfcModelType").MDL_PART).GetParam(Params[i][0]).Value.StringValue + "' ></input></td></tr>";
+        } else {
+            outputTable += "<tr class='" + "odd" +"'><td>" + Params[i][0] + "</td><td colspan='2' rowspan='1'><input type='text' id='Input_"+Params[i][1]+"' onChange='UpdateValue(this.name,this.value,this.id)' name ='" + Params[i][0] + "' value='" + Dwg.GetParam(Params[i][0]).Value.StringValue + "' ></input></td></tr>";
+        }
+        // alert("end "+Params[i][0]);
+    }
+    
     function writeValues(i) {
         for (k=0;k<ReqParams.length;k++)
         {
             if (Dwg.InstanceName.indexOf(DwgModels.Item(0).InstanceName) > -1) {
                 if (DwgModels.Item(0).Descr.Type == pfcCreate("pfcModelType").MDL_PART) {
                     // DRW PARAM SYNC FROM MODEL
-                    var PrtModel = oSession.GetModel(DwgModels.Item(0).InstanceName,pfcCreate("pfcModelType").MDL_PART)
+                    var PrtModel = oSession.GetModel(DwgModels.Item(0).InstanceName,pfcCreate("pfcModelType").MDL_PART);
 
                     //Create Parameter
                     if (PrtModel.GetParam(ReqParams[k]) == void null)               { PrtModel.CreateParam(ReqParams[k], createParamValueFromString("")); }
@@ -273,14 +382,14 @@
                     if (Dwg.GetParam(ReqParams[k]).Value.StringValue.length == 0        && ReqValue[k].length > 0)  { Dwg.GetParam(ReqParams[k]).Value = pfcCreate("MpfcModelItem").CreateStringParamValue(ReqValue[k]);        Output += "<li>" + ReqParams[k] + " : " + ReqValue[k] + " (drw sync with default value)</li>"; }
 
                     //DRW PARAM SYNC FROM PRT
-                    if (Dwg.GetParam(ReqParams[k]).Value.StringValue != DwgModels.Item(i).GetParam(ReqParams[k]).Value.StringValue) {
-                        Dwg.GetParam(ReqParams[k]).Value = DwgModels.Item(i).GetParam(ReqParams[k]).Value;
+                    if (Dwg.GetParam(ReqParams[k]).Value.StringValue != DwgModels.Item(0).GetParam(ReqParams[k]).Value.StringValue) {
+                        Dwg.GetParam(ReqParams[k]).Value = DwgModels.Item(0).GetParam(ReqParams[k]).Value;
                         Output += "<li>" + ReqParams[k] + " : " + Dwg.GetParam(ReqParams[k]).Value.StringValue + " (drw sync from submodel)</li>";
                     }
                 } else if (DwgModels.Item(0).Descr.Type == pfcCreate("pfcModelType").MDL_ASSEMBLY) {
                     // DRW PARAM SYNC FROM MODEL AND SUBMODEL
-                    var SubPrtModel = oSession.GetModel(DwgModels.Item(0).InstanceName,pfcCreate("pfcModelType").MDL_PART)
-                    var SubAsmModel = oSession.GetModel(DwgModels.Item(0).InstanceName,pfcCreate("pfcModelType").MDL_ASSEMBLY)
+                    var SubPrtModel = oSession.GetModel(DwgModels.Item(0).InstanceName,pfcCreate("pfcModelType").MDL_PART);
+                    var SubAsmModel = oSession.GetModel(DwgModels.Item(0).InstanceName,pfcCreate("pfcModelType").MDL_ASSEMBLY);
 
                     if (SubPrtModel.InstanceName == SubAsmModel.InstanceName) {
                         //Create Parameter
@@ -845,28 +954,32 @@
         }
     }
     
-    function UpdateValue(name,value) {
+    function UpdateValue(name,value,id) {
         //alert(name+" "+value);
         var SubPrtModel = oSession.GetModel(Dwg.InstanceName,pfcCreate("pfcModelType").MDL_PART);
         var SubAsmModel = oSession.GetModel(Dwg.InstanceName,pfcCreate("pfcModelType").MDL_ASSEMBLY);
 
-        if (SubPrtModel != void null) {
-            //Create PRT Param if not found
-            if (SubPrtModel.GetParam(name) == void null)    { SubPrtModel.CreateParam(name, createParamValueFromString("")); }
-            //Set new value
-            SubPrtModel.GetParam(name).Value =  pfcCreate("MpfcModelItem").CreateStringParamValue(value);
+        if (id == "Input_Sync" || id == "Input_sync" || id == "Input_Models") {
+            if (SubPrtModel != void null) {
+                //Create PRT Param if not found
+                if (SubPrtModel.GetParam(name) == void null)    { SubPrtModel.CreateParam(name, createParamValueFromString("")); }
+                //Set new value
+                SubPrtModel.GetParam(name).Value =  pfcCreate("MpfcModelItem").CreateStringParamValue(value);
+            }
+            if (SubAsmModel != void null) {
+                //Create ASM Param if not found
+                if (SubAsmModel.GetParam(name) == void null)    { SubAsmModel.CreateParam(name, createParamValueFromString("")); }
+                //Set new value
+                SubAsmModel.GetParam(name).Value =  pfcCreate("MpfcModelItem").CreateStringParamValue(value);
+            }
         }
-        if (SubAsmModel != void null) {
-            //Create ASM Param if not found
-            if (SubAsmModel.GetParam(name) == void null)    { SubAsmModel.CreateParam(name, createParamValueFromString("")); }
-            //Set new value
-            SubAsmModel.GetParam(name).Value =  pfcCreate("MpfcModelItem").CreateStringParamValue(value);
-        }
-        if (Dwg != void null) {
-            //Create DRW Param if not found
-            if (Dwg.GetParam(name) == void null)            { Dwg.CreateParam(name, createParamValueFromString("")); }
-            //Set new value
-            Dwg.GetParam(name).Value =          pfcCreate("MpfcModelItem").CreateStringParamValue(value);
+        if (id == "Input_NoSync" || id == "Input_Sync" || id == "Input_nosync" || id == "Input_sync" || id == "Input_Drw") {
+            if (Dwg != void null) {
+                //Create DRW Param if not found
+                if (Dwg.GetParam(name) == void null)            { Dwg.CreateParam(name, createParamValueFromString("")); }
+                //Set new value
+                Dwg.GetParam(name).Value =          pfcCreate("MpfcModelItem").CreateStringParamValue(value);
+            }
         }
         //alert("Param Updated:"+name+" Value:"+value);
         
