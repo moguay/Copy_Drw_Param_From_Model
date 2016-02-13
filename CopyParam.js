@@ -4,19 +4,6 @@
     //Provisional on=auto off=forced off
     var Provisional = "off"
     
-    //By
-    var ByParams = new Array("SE_DESIGNER","SE_APPROVER");
-    var ByValue = new Array(DesignerName,AppoverName);
-    
-    //Rev
-    var RevParams = new Array("SE_REVISION");
-    var RevModelValue = new Array(ModelsRev);
-    var RevDwgValue = new Array(DrawingRev);
-    
-    //list of Copy Params SETUP
-    var ReqParams = new Array("SE_DESCRIPTION_ENGLISH"   ,"SE_DESCRIPTION_LOCAL"     ,"SE_PROJECT"   ,"PDM_SERVER"   ,"SE_NOTE"  );
-    var ReqValue =  new Array(""                         ,""                         ,ProjectName    ,"none"         ,""         );
-    
     var Today = new Date();
     var Today = (Today.getDate() < 10 ? '0' : '') +  Today.getDate() + "/" + (Today.getMonth() + 1 < 10 ? '0' : '') + (Today.getMonth() + 1) + "/" + Today.getFullYear();
 
@@ -25,7 +12,7 @@
     //                     SE_PARAM                  SYNC        !Value      Value      Def Drw Value   Def Model Value
     Params[0] = new Array("SE_DESIGNER",            "nosync",   "default",  "default",  DesignerName,   "null");
     Params[1] = new Array("SE_APPROVER",            "nosync",   "default",  "manual",   AppoverName,    "null");
-    Params[2] = new Array("SE_DATE",                "nosync",   "auto",     "auto",     Today,          "null");
+    Params[2] = new Array("SE_DATE",                "nosync",   "default",  "default",     Today,          "null");
     Params[3] = new Array("SE_REVISION",            "nosync",   "default",  "manual",   DrawingRev,     ModelsRev);
     Params[4] = new Array("SE_DESCRIPTION_ENGLISH", "sync",     "manual",   "manual",   "",             "");
     Params[5] = new Array("SE_DESCRIPTION_LOCAL",   "sync",     "manual",   "manual",   "",             "");
@@ -103,65 +90,6 @@
                 outputTable += "<table width='100%'>";
                 outputTable += "<thead><tr><th scope='col'>Parameters</th><th scope='col' colspan='2' rowspan='1'>values</th></tr></thead>";
                 outputTable += "<tbody>";
-                
-                /*
-                //By
-                for (var i=0; i<ByParams.length; i++)
-                {
-                    if (Dwg.GetParam(ByParams[i]).Value.StringValue != ByValue[i]) {
-                        Dwg.GetParam(ByParams[i]).Value = pfcCreate("MpfcModelItem").CreateStringParamValue(ByValue[i]);
-                        Output += "<li>" + ByParams[i] + " : " + ByValue[i] + "</li>";
-                    }
-                    WarningMsg(ByParams[i]);
-                    outputTable += "<tr class='" + "odd" +"'><td>" + ByParams[i] + "</td><td><input type='text' onChange='UpdateValue(this.name,this.value)' name ='" + ByParams[i] + "' value='" + Dwg.GetParam(ByParams[i]).Value.StringValue + "' ></input></td></tr>";
-                }
-    
-                //Date
-                var DateParams = new Array("SE_DATE");
-                if (Dwg.GetParam(DateParams[0]).Value.StringValue == false ) {
-                    var Today = new Date();
-                    var Today = (Today.getDate() < 10 ? '0' : '') +  Today.getDate() + "/" + (Today.getMonth() + 1 < 10 ? '0' : '') + (Today.getMonth() + 1) + "/" + Today.getFullYear();
-                    Dwg.GetParam(DateParams[0]).Value = pfcCreate("MpfcModelItem").CreateStringParamValue(Today);
-                    Output += "<li>" + DateParams[0] + " : " + Today + "</li>";
-                }
-                outputTable += "<tr class='" + "odd" +"'><td>" + DateParams[0] + "</td><td><input type='text' onChange='UpdateValue(this.name,this.value)' name ='" + DateParams[0] + "' value='" + Dwg.GetParam(DateParams[0]).Value.StringValue + "' ></input></td></tr>";
-                WarningMsg(DateParams[0]);
-                
-                //Drawing Rev
-                if (Dwg.GetParam(RevParams[0]).Value.StringValue == false ) {
-                    if (Dwg.GetParam(RevParams[0]).Value.StringValue == "") {
-                        Dwg.GetParam(RevParams[0]).Value = pfcCreate("MpfcModelItem").CreateStringParamValue(RevDwgValue[0]);
-                        Output += "<li>" + RevParams[0] + " : " + RevDwgValue[0] + " (drw rev with default value)</li>";
-                    }
-                    // WarningMsg(DateParams[0]);
-                }
-                outputTable += "<tr class='" + "odd" +"'><td>" + RevParams[0] + "</td><td><input type='text' name ='" + RevParams[0] + "' value='" + Dwg.GetParam(RevParams[0]).Value.StringValue + "' ></input></td></tr>";
-
-                //Models Rev
-                if (part != void null) {
-                    if (part.GetParam(RevParams[0]).Value.StringValue == false ) {
-                        if (part.GetParam(RevParams[0]).Value.StringValue == "") {
-                            part.GetParam(RevParams[0]).Value = pfcCreate("MpfcModelItem").CreateStringParamValue(RevModelValue[0]);
-                            Output += "<li>" + RevParams[0] + " : " + RevModelValue[0] + " (prt rev with default value)</li>";
-                        }
-                        // WarningMsg(DateParams[0]);
-                    }
-                    outputTable += "<tr class='" + "odd" +"'><td>" + RevParams[0] + "</td><td><input type='text' name ='" + RevParams[0] + "' value='" + part.GetParam(RevParams[0]).Value.StringValue + "' ></input></td></tr>";
-                }
-                if (assembly != void null) {
-                    if (assembly.GetParam(RevParams[0]).Value.StringValue == false ) {
-                        if (assembly.GetParam(RevParams[0]).Value.StringValue == "") {
-                            assembly.GetParam(RevParams[0]).Value = pfcCreate("MpfcModelItem").CreateStringParamValue(RevModelValue[0]);
-                            Output += "<li>" + RevParams[0] + " : " + RevModelValue[0] + " (asm rev with default value)</li>";
-                        }
-                        // WarningMsg(DateParams[0]);
-                    }
-                    outputTable += "<tr class='" + "odd" +"'><td>" + RevParams[0] + "</td><td><input type='text' name ='" + RevParams[0] + "' value='" + assembly.GetParam(RevParams[0]).Value.StringValue + "' ></input></td></tr>";
-                }
-
-                //Synchronize all ReqParams Value
-                writeValues(0);
-                */
                 
                 //Synchronize all Params Value
                 for (i=0;i<Params.length;i++)
@@ -298,8 +226,8 @@
                     if (Dwg.GetParam(Params[i][0]) == void null         && Params[i][4] != "null")  { Dwg.CreateParam(Params[i][0], createParamValueFromString("")); }
             // alert("set2");
                     //Set Default Value
-                    if (Params[i][5] != "null") { if (PrtModel.GetParam(Params[i][0]).Value.StringValue.length == 0   && Params[i][5].length > 0)  { PrtModel.GetParam(Params[i][0]).Value = pfcCreate("MpfcModelItem").CreateStringParamValue(Params[i][5]);   Output += "<li>" + Params[i][0] + " : " + Params[i][5] + " (prt sync with default value)</li>"; } }
-                    if (Params[i][4] != "null") { if (Dwg.GetParam(Params[i][0]).Value.StringValue.length == 0        && Params[i][4].length > 0)  { Dwg.GetParam(Params[i][0]).Value = pfcCreate("MpfcModelItem").CreateStringParamValue(Params[i][4]);        Output += "<li>" + Params[i][0] + " : " + Params[i][4] + " (drw sync with default value)</li>"; } }
+                    if (Params[i][5] != "null" && PrtModel.GetParam(Params[i][0]).Value.StringValue != Params[i][5]) { if ((PrtModel.GetParam(Params[i][0]).Value.StringValue.length == 0   && Params[i][2] == "default") || (PrtModel.GetParam(Params[i][0]).Value.StringValue.length > 0   && Params[i][3] == "default")) { PrtModel.GetParam(Params[i][0]).Value = pfcCreate("MpfcModelItem").CreateStringParamValue(Params[i][5]);   Output += "<li>" + Params[i][0] + " : " + Params[i][5] + " (prt sync with default value)</li>"; } }
+                    if (Params[i][4] != "null" && Dwg.GetParam(Params[i][0]).Value.StringValue != Params[i][4])      { if ((Dwg.GetParam(Params[i][0]).Value.StringValue.length == 0        && Params[i][2] == "default") || (Dwg.GetParam(Params[i][0]).Value.StringValue.length > 0        && Params[i][3] == "default")) { Dwg.GetParam(Params[i][0]).Value = pfcCreate("MpfcModelItem").CreateStringParamValue(Params[i][4]);        Output += "<li>" + Params[i][0] + " : " + Params[i][4] + " (drw sync with default value)</li>"; } }
             // alert("set3");
                     //DRW PARAM SYNC FROM PRT
                     if (Params[i][1] == "sync") {
@@ -321,9 +249,9 @@
                         if (Dwg.GetParam(Params[i][0]) == void null         &&  Params[i][4] != "null")     { Dwg.CreateParam(Params[i][0], createParamValueFromString("")); }
             // alert("set2");
                         //Set Default Value
-                        if (Params[i][5] != "null") { if (SubPrtModel.GetParam(Params[i][0]).Value.StringValue.length == 0    && Params[i][5].length > 0)  { SubPrtModel.GetParam(Params[i][0]).Value = pfcCreate("MpfcModelItem").CreateStringParamValue(Params[i][5]);    Output += "<li>" + Params[i][0] + " : " + Params[i][5] + " (prt sync with default value)</li>"; } }
-                        if (Params[i][5] != "null") { if (SubAsmModel.GetParam(Params[i][0]).Value.StringValue.length == 0    && Params[i][5].length > 0)  { SubAsmModel.GetParam(Params[i][0]).Value = pfcCreate("MpfcModelItem").CreateStringParamValue(Params[i][5]);    Output += "<li>" + Params[i][0] + " : " + Params[i][5] + " (asm sync with default value)</li>"; } }
-                        if (Params[i][4] != "null") { if (Dwg.GetParam(Params[i][0]).Value.StringValue.length == 0            && Params[i][4].length > 0)  { Dwg.GetParam(Params[i][0]).Value = pfcCreate("MpfcModelItem").CreateStringParamValue(Params[i][4]);            Output += "<li>" + Params[i][0] + " : " + Params[i][4] + " (drw sync with default value)</li>"; } }
+                        if (Params[i][5] != "null" && SubPrtModel.GetParam(Params[i][0]).Value.StringValue != Params[i][5])  { if ((SubPrtModel.GetParam(Params[i][0]).Value.StringValue.length == 0    && Params[i][2] == "default") || (SubPrtModel.GetParam(Params[i][0]).Value.StringValue.length > 0    && Params[i][3] == "default"))  { SubPrtModel.GetParam(Params[i][0]).Value = pfcCreate("MpfcModelItem").CreateStringParamValue(Params[i][5]);    Output += "<li>" + Params[i][0] + " : " + Params[i][5] + " (prt sync with default value)</li>"; } }
+                        if (Params[i][5] != "null" && SubAsmModel.GetParam(Params[i][0]).Value.StringValue != Params[i][5])  { if ((SubAsmModel.GetParam(Params[i][0]).Value.StringValue.length == 0    && Params[i][2] == "default") || (SubAsmModel.GetParam(Params[i][0]).Value.StringValue.length > 0    && Params[i][3] == "default"))  { SubAsmModel.GetParam(Params[i][0]).Value = pfcCreate("MpfcModelItem").CreateStringParamValue(Params[i][5]);    Output += "<li>" + Params[i][0] + " : " + Params[i][5] + " (asm sync with default value)</li>"; } }
+                        if (Params[i][4] != "null" && Dwg.GetParam(Params[i][0]).Value.StringValue != Params[i][4])          { if ((Dwg.GetParam(Params[i][0]).Value.StringValue.length == 0            && Params[i][2] == "default") || (Dwg.GetParam(Params[i][0]).Value.StringValue.length > 0            && Params[i][3] == "default"))  { Dwg.GetParam(Params[i][0]).Value = pfcCreate("MpfcModelItem").CreateStringParamValue(Params[i][4]);            Output += "<li>" + Params[i][0] + " : " + Params[i][4] + " (drw sync with default value)</li>"; } }
             // alert("set3");
                         //DRW PARAM SYNC FROM PRT
                         if (Params[i][1] == "sync") {
@@ -365,73 +293,6 @@
         // alert("end "+Params[i][0]);
     }
     
-    function writeValues(i) {
-        for (k=0;k<ReqParams.length;k++)
-        {
-            if (Dwg.InstanceName.indexOf(DwgModels.Item(0).InstanceName) > -1) {
-                if (DwgModels.Item(0).Descr.Type == pfcCreate("pfcModelType").MDL_PART) {
-                    // DRW PARAM SYNC FROM MODEL
-                    var PrtModel = oSession.GetModel(DwgModels.Item(0).InstanceName,pfcCreate("pfcModelType").MDL_PART);
-
-                    //Create Parameter
-                    if (PrtModel.GetParam(ReqParams[k]) == void null)               { PrtModel.CreateParam(ReqParams[k], createParamValueFromString("")); }
-                    if (Dwg.GetParam(ReqParams[k]) == void null)                    { Dwg.CreateParam(ReqParams[k], createParamValueFromString("")); }
-
-                    //Set Default Value
-                    if (PrtModel.GetParam(ReqParams[k]).Value.StringValue.length == 0   && ReqValue[k].length > 0)  { PrtModel.GetParam(ReqParams[k]).Value = pfcCreate("MpfcModelItem").CreateStringParamValue(ReqValue[k]);   Output += "<li>" + ReqParams[k] + " : " + ReqValue[k] + " (prt sync with default value)</li>"; }
-                    if (Dwg.GetParam(ReqParams[k]).Value.StringValue.length == 0        && ReqValue[k].length > 0)  { Dwg.GetParam(ReqParams[k]).Value = pfcCreate("MpfcModelItem").CreateStringParamValue(ReqValue[k]);        Output += "<li>" + ReqParams[k] + " : " + ReqValue[k] + " (drw sync with default value)</li>"; }
-
-                    //DRW PARAM SYNC FROM PRT
-                    if (Dwg.GetParam(ReqParams[k]).Value.StringValue != DwgModels.Item(0).GetParam(ReqParams[k]).Value.StringValue) {
-                        Dwg.GetParam(ReqParams[k]).Value = DwgModels.Item(0).GetParam(ReqParams[k]).Value;
-                        Output += "<li>" + ReqParams[k] + " : " + Dwg.GetParam(ReqParams[k]).Value.StringValue + " (drw sync from submodel)</li>";
-                    }
-                } else if (DwgModels.Item(0).Descr.Type == pfcCreate("pfcModelType").MDL_ASSEMBLY) {
-                    // DRW PARAM SYNC FROM MODEL AND SUBMODEL
-                    var SubPrtModel = oSession.GetModel(DwgModels.Item(0).InstanceName,pfcCreate("pfcModelType").MDL_PART);
-                    var SubAsmModel = oSession.GetModel(DwgModels.Item(0).InstanceName,pfcCreate("pfcModelType").MDL_ASSEMBLY);
-
-                    if (SubPrtModel.InstanceName == SubAsmModel.InstanceName) {
-                        //Create Parameter
-                        if (SubPrtModel.GetParam(ReqParams[k]) == void null)    { SubPrtModel.CreateParam(ReqParams[k], createParamValueFromString("")); }
-                        if (SubAsmModel.GetParam(ReqParams[k]) == void null)    { SubAsmModel.CreateParam(ReqParams[k], createParamValueFromString("")); }
-                        if (Dwg.GetParam(ReqParams[k]) == void null)            { Dwg.CreateParam(ReqParams[k], createParamValueFromString("")); }
-
-                        //Set Default Value
-                        if (SubPrtModel.GetParam(ReqParams[k]).Value.StringValue.length == 0    && ReqValue[k].length > 0)  { SubPrtModel.GetParam(ReqParams[k]).Value = pfcCreate("MpfcModelItem").CreateStringParamValue(ReqValue[k]);    Output += "<li>" + ReqParams[k] + " : " + ReqValue[k] + " (prt sync with default value)</li>"; }
-                        if (SubAsmModel.GetParam(ReqParams[k]).Value.StringValue.length == 0    && ReqValue[k].length > 0)  { SubAsmModel.GetParam(ReqParams[k]).Value = pfcCreate("MpfcModelItem").CreateStringParamValue(ReqValue[k]);    Output += "<li>" + ReqParams[k] + " : " + ReqValue[k] + " (asm sync with default value)</li>"; }
-                        if (Dwg.GetParam(ReqParams[k]).Value.StringValue.length == 0            && ReqValue[k].length > 0)  { Dwg.GetParam(ReqParams[k]).Value = pfcCreate("MpfcModelItem").CreateStringParamValue(ReqValue[k]);            Output += "<li>" + ReqParams[k] + " : " + ReqValue[k] + " (drw sync with default value)</li>"; }
-
-                        //DRW PARAM SYNC FROM PRT
-                        if (Dwg.GetParam(ReqParams[k]).Value.StringValue != SubPrtModel.GetParam(ReqParams[k]).Value.StringValue) {
-                            Dwg.GetParam(ReqParams[k]).Value = SubPrtModel.GetParam(ReqParams[k]).Value;
-                            Output += "<li>" + ReqParams[k] + " : " + Dwg.GetParam(ReqParams[k]).Value.StringValue + " (drw sync from prt)</li>";
-                        }
-                        //ASM PARAM SYNC FROM PRT
-                        if (SubAsmModel.GetParam(ReqParams[k]).Value.StringValue != SubPrtModel.GetParam(ReqParams[k]).Value.StringValue) {
-                            SubAsmModel.GetParam(ReqParams[k]).Value = SubPrtModel.GetParam(ReqParams[k]).Value;
-                            Output += "<li>" + ReqParams[k] + " : " + Dwg.GetParam(ReqParams[k]).Value.StringValue + " (asm sync from prt)</li>";
-                        }
-                    } else {
-                        warning.innerHTML += "Model and sub Model do not have the same name. Parameter need to be set manually<br />";
-                        document.getElementById("fieldset1").style.border = "2px solid red";
-                        return false;
-                    }
-                }
-            } else {
-                warning.innerHTML += "Drawing and Model do not have the same name. Parameter need to be set manually<br />";
-                document.getElementById("fieldset1").style.border = "2px solid red";
-                return false;
-            }
-            WarningMsg(ReqParams[k]);
-            outputTable += "<tr class='" + "odd" +"'><td>" + ReqParams[k] + "</td><td><input type='text' onChange='UpdateValue(this.name,this.value)' name ='" + ReqParams[k] + "' value='" + Dwg.GetParam(ReqParams[k]).Value.StringValue + "' ></input></td></tr>";
-        }
-        //document.getElementById("application").style.display = "none";
-        //document.getElementById("warning").style.display = "none";
-        //document.getElementById("UI").innerHTML = "Done !<br />" + DwgModels.Item(i).InstanceName + " : Parameters values copied";
-        //oSession.RunMacro("~ Command `ProCmdDwgTblRegUpd`");
-    }
-
     function writeDwgValue(i,j,k) {
         if (Dwg.GetParam(j).Value.StringValue == false && Dwg.GetParam(j).Value.StringValue != k) {
             //write defaut parm to dwg
@@ -440,35 +301,6 @@
         }
     }
 
-    function writeDefaultValue(i,j,k) {
-        if (Dwg.InstanceName == DwgModels.Item(i).InstanceName) {
-                if (DwgModels.Item(0).Descr.Type == pfcCreate("pfcModelType").MDL_PART) {
-                    if (Dwg.GetParam(j).Value.StringValue.length == 0 && (DwgModels.Item(i).GetParam(j).Value.StringValue != k || Dwg.GetParam(j).Value.StringValue != k)) {
-                        //write defaut parm to model
-                        DwgModels.Item(i).GetParam(j).Value =       pfcCreate("MpfcModelItem").CreateStringParamValue(k);
-                        //write defaut parm to dwg
-                        Dwg.GetParam(j).Value =                     pfcCreate("MpfcModelItem").CreateStringParamValue(k);
-                        Output += "<li>" + j + " : " + k + " (sync from default value)</li>";
-                    }
-                } else if (DwgModels.Item(0).Descr.Type == pfcCreate("pfcModelType").MDL_ASSEMBLY) {
-                    var SubPrtModel = oSession.GetModel(DwgModels.Item(0).InstanceName,pfcCreate("pfcModelType").MDL_PART)
-                    var SubAsmModel = oSession.GetModel(DwgModels.Item(0).InstanceName,pfcCreate("pfcModelType").MDL_ASSEMBLY)
-
-                    if (SubPrtModel.InstanceName == SubAsmModel.InstanceName) {
-                        if (Dwg.GetParam(j).Value.StringValue.length == 0 && (SubAsmModel.GetParam(j).Value.StringValue != k || SubPrtModel.GetParam(j).Value.StringValue != k || Dwg.GetParam(j).Value.StringValue != k)) {
-                            //write defaut parm to asm
-                            SubAsmModel.GetParam(j).Value =         pfcCreate("MpfcModelItem").CreateStringParamValue(k);
-                            //write defaut parm to prt
-                            SubPrtModel.GetParam(j).Value =         pfcCreate("MpfcModelItem").CreateStringParamValue(k);
-                            //write defaut parm to dwg
-                            Dwg.GetParam(j).Value =                 pfcCreate("MpfcModelItem").CreateStringParamValue(k);
-                            Output += "<li>" + j + " : " + k + " (sync from default value)</li>";
-                        }
-                    }
-                }
-        }
-    }
-    
     function ReWriteTable() {
         //Parent PRT Session ID
         var SID=oSession.GetModel(DwgModels.Item(0).InstanceName,pfcCreate("pfcModelType").MDL_PART).RelationId;
@@ -527,7 +359,9 @@
                             //alert(Released);
 
                             if (Provisional != "on") {
-                                ModifyCellText(table, Cell, "", 6.0, "filled"); Output += "<li>Drawing State" + " : " + "Provisional" + "</li>";
+                                if (Out.indexOf("Provisional") > -1) {
+                                    ModifyCellText(table, Cell, "", 6.0, "filled"); Output += "<li>Drawing State" + " : " + "Provisional" + "(Removed)</li>";
+                                }
                             }
                             else
                             if (Out != "Provisional" && !Released)
@@ -866,19 +700,18 @@
 
     function AsmRelation(assembly) {
         if (assembly.RelationId > -1) {
-            var Found_se_material_1=1;
+            var Found_se_material_1=0;
             var Found_se_mass=0;
             var Found_se_volume=0;
             var Found_se_surface=0;
 
             for (var j=0;j<assembly.PostRegenerationRelations.Count; j++)
             {
-                if (assembly.PostRegenerationRelations.item(j).indexOf("se_material_1") > -1)   Found_se_material_1=0;
+                if (assembly.PostRegenerationRelations.item(j).indexOf("se_material_1") > -1)   Found_se_material_1=1;
                 if (assembly.PostRegenerationRelations.item(j).indexOf("se_mass") > -1)         Found_se_mass=1;
                 if (assembly.PostRegenerationRelations.item(j).indexOf("se_volume") > -1)       Found_se_volume=1;
                 if (assembly.PostRegenerationRelations.item(j).indexOf("se_surface") > -1)      Found_se_surface=1;
             }
-
             if (Found_se_material_1==1 || Found_se_mass==0 || Found_se_volume==0 || Found_se_surface==0) {
                 var relations = pfcCreate("stringseq");
                 relations.Append("/* Value SE Mass parameter with Creo Parameter");
