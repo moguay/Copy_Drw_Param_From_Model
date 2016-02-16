@@ -51,14 +51,14 @@ function Main() {
 
 				var holeInfo4 = document.createElement("span");
 				var holeInfo4input = document.createElement("input");
+				
 				holeInfo4input.type= "button";
 				//cette ligne rentre en erreur pourquoi puisque ligne 41 marche 
 				// holeInfo4Input.id = modelHoles.Item(i).Id;
 
-
 				holeInfo4input.className = "button";
 				holeInfo4input.value = "highlight";
-				// holeInfo4input.onclick = highlightHole(this.id);
+				// holeInfo4input.onclick = highlightHole(modelHoles.Item(i).Id);
 				//function(this.id){pfcCreate ("MpfcSelect").CreateModelItemSelection(Model.GetItemById(pfcCreate("pfcModelItemType").ITEM_FEATURE, 293), null).Display();};
 
 				holeInfo1.appendChild(document.createTextNode( modelHoles.Item(i).Id ));
@@ -83,7 +83,7 @@ function Main() {
 		oSession.GetModelWindow(Model).Repaint(); 
 
 // pfcCreate ("MpfcSelect").CreateModelItemSelection(Model.GetItemById(pfcCreate("pfcModelItemType").ITEM_FEATURE, "293"), null).Display();
-pfcCreate ("MpfcSelect").CreateModelItemSelection(Model.GetItemById(pfcCreate("pfcModelItemType").ITEM_FEATURE, modelHoles.Item(0).Id), null).Display();
+// pfcCreate ("MpfcSelect").CreateModelItemSelection(Model.GetItemById(pfcCreate("pfcModelItemType").ITEM_FEATURE, modelHoles.Item(0).Id), null).Display();
 // pfcCreate ("MpfcSelect").CreateModelItemSelection(Model.GetItemById(pfcCreate("pfcModelItemType").ITEM_FEATURE, modelHoles.Item(2).Id), null).Display();
 // pfcCreate ("MpfcSelect").CreateModelItemSelection(Model.GetItemById(pfcCreate("pfcModelItemType").ITEM_FEATURE, modelHoles.Item(5).Id), null).Display();
 // pfcCreate ("MpfcSelect").CreateModelItemSelection(Model.GetItemById(pfcCreate("pfcModelItemType").ITEM_FEATURE, modelHoles.Item(6).Id), null).Display();
