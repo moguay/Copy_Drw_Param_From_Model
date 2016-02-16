@@ -9,7 +9,7 @@ function Main() {
 	var holesTable = document.getElementById("holesTable");
 	if (Model.Descr.Type == pfcCreate("pfcModelType").MDL_PART & Model.GetParam("SE_MATERIAL_1").Value.StringValue.substring(0, 8) == "HUA17334" ) {
 		UI.innerHTML = Model.InstanceName + " is a PCB<br />Material " + Model.GetParam("SE_MATERIAL_1").Value.StringValue + "<br />" + modelHoles.Count + " holes found in the model to process<br />";
-		var outputTable = "<table><thead><tr><th >ID</th><th>State</th><th>Ecad hole type</th></tr></thead><tbody>";
+		var outputTable = "<table><thead><tr><th id='holeID'>ID</th><th id='holeState'>State</th><th id='holeType'>Ecad hole type</th></tr></thead><tbody>";
 		for (var i = 0; i < modelHoles.Count; i++) {
 				if (modelHoles.Item(i).GetParam("ECAD_HOLE_TYPE") == void null) {
 					var holeState = "Not set";
@@ -34,7 +34,6 @@ function highlightHole (holeID) {
 }
 
 function updateHoleValue (holeID, newValue) {
-	alert (holeID + ' ' + newValue);
 	modelHoles.Item(holeID).GetParam("ECAD_HOLE_TYPE").Value = pfcCreate("MpfcModelItem").CreateStringParamValue(newValue);
 }
 
@@ -97,5 +96,3 @@ function createParamValueFromString (s /* string */){
 
       return pfcCreate ("MpfcModelItem").CreateStringParamValue(s);
     }
-
-	
