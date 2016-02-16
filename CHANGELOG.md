@@ -1,5 +1,10 @@
 ## 0.5 (2016-02-16)
 
+Features:
+
+  - Add Changelog
+  - Add Readme
+
 Bugfixes:
 
   - Fix, rewrite tolerance value
