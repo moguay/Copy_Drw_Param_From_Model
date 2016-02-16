@@ -1,47 +1,61 @@
-    body {
-        font-family: Verdana;
-        font-size: 75%;
-        background-color: #E7E9E0;
-        width: 100%;
-    }
-    div.cat {
-        color: white;
-        background-color: #009530;
-        text-transform: uppercase;
-    }
+body {
+	font-family: Verdana;
+	font-size: 75%;
+	background-color: #E7E9E0;
+	width: 100%;
+}
+#header{
+	background-color: #009530;
+	font-size: 1em;
+	width: 100%;
+	height: 85px;
+	color: white;
+	padding: 0.5em;
+	background-image: url(http://pfrxiri10.fr.schneider-electric.com/MDM/netmarkets/images/logoPDML.gif);
+	background-repeat: no-repeat;
+	padding-bottom: 2px;
+	position: relative;
+}
 
-    div.holeInfo {
-        border-bottom: 2px solid #009530;
-        padding: 0px;
-        margin: 0px;
-		height: 28px;
-		text-align: center;
-		vertical-align: middle;
-		width: 405px;
-		min-width: 200px;
-    }
+#header-content {
+	position: absolute;
+	bottom: 0;
+	left: 20px;
+}
+.odd {
+	background-color: #b9bab3;
+	font-size: 100%;
+}
+.even {
+	font-size: 100%;
+}
+#holesTable{
+ width: 600px;
+ min-width: 400px;}
+ 
+table {
+	padding: 0px;
+	border-collapse: collapse;
+	width : 100%;
+	margin:10px auto 10px auto;
+}
 
-	span {
-		display: block;
-        float: left;
-		width: 25%;
-		border-left: 1px solid #E0E0E0;
-	}
-	span.id, span.creation {
-        vertical-align: middle;
-		text-align: center;
-		height: 100%;
-	}
+thead {
+	color: white;
+	background-color: #009530;
+	text-transform: uppercase;
+}
 
-    .odd {
-        background-color: #b9bab3;
-        font-size: 100%;
-    }
-	 .even {
-        font-size: 100%;
-    }
-    input {
-        border: 1px solid white;
-        width: 100px;
-    }
-	
+tr {
+	/*padding-top: 20px;*/
+	margin: 0px;
+}
+td, th {
+	text-align: center;
+	border-bottom: 1px solid #009530;
+	width: 33%;
+}
+input {
+	border: none;
+	width: 100%;
+}
