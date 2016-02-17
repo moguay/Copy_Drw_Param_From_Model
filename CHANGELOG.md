@@ -1,9 +1,14 @@
+## 0.6 (2016-02-17)
+
+Features:
+
+  - Add user material selection
+
 ## 0.5 (2016-02-16)
 
 Features:
 
   - Add Changelog
-  - Add Readme
 
 Bugfixes:
 
