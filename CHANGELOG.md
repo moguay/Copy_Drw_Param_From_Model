@@ -1,3 +1,8 @@
+## TodoList
+- Preset the drawing working directory (CS/Project/Drawing)
+- Preset / Rename Filename = Number = Common Name
+- Add, button to force default value (ex: Approver)
+
 ## 0.6 (2016-02-17)
 
 Features:
