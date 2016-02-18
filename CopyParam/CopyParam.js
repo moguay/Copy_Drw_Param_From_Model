@@ -224,9 +224,13 @@
                 //Create material Select List
                 outputTable += "<tr class='" + "odd" +"'><td>" + "MATERIAL" + "</td><td colspan='2' rowspan='1'>";
                 outputTable += "<select name='select' onchange='AssignMaterial(this)'>";
-                
                 var curMat
                 if (part.CurrentMaterial) curMat = part.CurrentMaterial.Name;
+                if (curMat == void null || curMat.toUpperCase() == "UNDEF") {
+                    outputTable += "<option selected></option>"
+                } else {
+                    outputTable += "<option></option>"
+                }
 
                 for (var i=0;i<matList.length;i++) {
                     var space = "";
