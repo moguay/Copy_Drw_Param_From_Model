@@ -30,6 +30,7 @@
         position: absolute;
         bottom: 0;
         left: 20px;
+        font-size: 1.25em;
     }
 
     .header-title {
@@ -97,9 +98,12 @@
         width: 0%;*/
     }
 
-    .odd {
+    .odd, .odd1, .odd2 {
         background-color: #b9bab3;
         font-size: 75%;
+        width:0%;
+        padding-right: 10px;
+        padding-left: 10px;
     }
 
     input {
@@ -114,10 +118,17 @@
         /*width: 100%;*/
     }
     
-    #Input_Drw, #Input_Models {
+    button {
+        /*border: 1px solid white;*/
+        font-family: monospace;*/
+        background-color:#80d4ff;
+        height: 19px;
+        padding: 0px;
+        margin: 0px;
+        /*width: 100%;*/
+    }
+    
+    #Input_Drw, #Input_Models, #Input_Sync, #Input_NoSync, #Select_Def {
         width: 100%;
     }
     
-    #Input_Sync, #Input_NoSync {
-        width: 100%;
-    }

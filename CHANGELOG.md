@@ -1,13 +1,9 @@
-## TodoList
-- Preset the drawing working directory (CS/Project/Drawing)
-- Preset / Rename Filename = Number = Common Name
-- Add, button to force default value (ex: Approver)
-
-## 0.6 (2016-02-17)
+## 0.6 (2016-02-18)
 
 Features:
 
-  - Add user material selection
+  - Add user material selection (need to reconfigure the ini file)
+  - Add default value buttom to force reset
 
 ## 0.5 (2016-02-16)
 
