@@ -883,9 +883,11 @@
         var checkoutoptions =  pfccheckoutoptions.Create();
         checkoutoptions.Download =false;
         checkoutoptions.Readonly =true;
-        
+
         var matFileName;
         var matName = s[s.selectedIndex].value.toLowerCase();
+        if (matName == void null || matName == "" || matName.toUpperCase() == "UNDEF") matName = "undef";
+        
         var matNames = pfcCreate ("stringseq");
 		matNames.set (0, matName.toLowerCase() + ".mtl");
         matNames.set (1, matName.toUpperCase() + ".MTL");
@@ -896,13 +898,13 @@
         var wsModel;
         var modelInWs;
         var materialIndex
-        
+
         //Part Analysis for very fast change
         for (i=0;i<part.ListMaterials().Count;i++) {
             //find added material
             if (part.ListMaterials().Item(i).Name.toUpperCase() == matName.toUpperCase()) { materialIndex = i; }
         }
-        
+
         var j = 0;
         for (i=0;i<4 && wsLink==void null && modelInWs == void null && materialIndex == void null;i++) {
             // Check if Material is on WS for quick change
@@ -933,7 +935,7 @@
                 }
             }
         }
-        
+
         if (matFileName != void null && materialIndex == void null) {
             // Import new Matrial in part
             part.RetrieveMaterial(matName);
@@ -943,7 +945,7 @@
         for (i=0;i<part.ListMaterials().Count;i++) {
             // Clear all part marterial
             //part.ListMaterials().Item(i).Delete();
-            
+
             //find added material
             if (part.ListMaterials().Item(i).Name.toUpperCase() == matName.toUpperCase()) { materialIndex = i; }
         }
@@ -951,14 +953,14 @@
         if (materialIndex != void null) {
             // Set new Matrial in part
             part.CurrentMaterial = part.ListMaterials().Item(materialIndex);
-            
+
             // alert(part.ListMaterials().Item(0).Name);
             location.reload();
-            
+
             return true;
         } else {
             return false;
         }
     }
-    
+
     // mdlDescr.SetPath(workdir);
