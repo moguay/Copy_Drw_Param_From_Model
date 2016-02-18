@@ -805,7 +805,6 @@
                 // se_surface=pro_mp_area/100
 
                 relations.Append("/* Value \"condition\" in file material");
-                relations.Append("se_material_1=\"");
                 relations.Append("if (ptc_material_name == \"UNASSIGNED\")");
                 relations.Append("se_material_1=\"UNDEF-undef\"");
                 relations.Append("else");
