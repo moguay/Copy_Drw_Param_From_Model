@@ -107,7 +107,7 @@
     }
 
     input {
-        border: 1px solid white;
+        border: 0px solid white;
         font-family: monospace;
         /*width: 100%;*/
     }
@@ -121,12 +121,20 @@
     button {
         /*border: 1px solid white;*/
         font-family: monospace;*/
-        background-color:#80d4ff;
+        /*background-color:#80d4ff;*/
+        background-color:#42B4E6;
+        /*background-color:#FFFFFF;*/
+        /*border:none;*/
         height: 19px;
         padding: 0px;
         margin: 0px;
         /*width: 100%;*/
     }
+    
+    /*#button:hover, .button:hover, button:hover {
+        border: 1px solid white;
+        background-color:#80d4ff;
+    }*/
     
     #Input_Drw, #Input_Models, #Input_Sync, #Input_NoSync, #Select_Def {
         width: 100%;

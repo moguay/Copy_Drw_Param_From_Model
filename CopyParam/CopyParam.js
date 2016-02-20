@@ -46,7 +46,13 @@
 
     function CopyParam()
     {
-        if (Prt.Descr.Type == pfcCreate("pfcModelType").MDL_PART) {
+        if (CurrentModel == void null) {
+            //Inform user of problem
+            warning.innerHTML="YOU CAN ONLY RUN THIS APPLICATION ON MODEL";
+            document.getElementById("fieldset1").style.border = "2px solid red";
+            document.getElementById("warning").style.color = "red";
+            
+        } else if (Prt.Descr.Type == pfcCreate("pfcModelType").MDL_PART) {
 
             modelsName = Prt.InstanceName;
 
@@ -81,7 +87,7 @@
             for (var i=0;i<FeatComponants.Count;i++)
             {
                 if (FeatComponants.Item(i).GetParam("SE_PART_NUMBER") == void null) {
-                    FeatComponants.Item(i).CreateParam("SE_PART_NUMBER", createParamValueFromString(FeatComponants.Item(i).ModelDescr.InstanceName));
+                    FeatComponants.Item(i).CreateParam("SE_PART_NUMBER", CreateParamValue("STRING",FeatComponants.Item(i).ModelDescr.InstanceName));
                     Output += "<li>" + "SE_PART_NUMBER" + " : " + FeatComponants.Item(i).GetParam("SE_PART_NUMBER").Value.StringValue + " (create in assembly)</li>";
                 }
             }
@@ -213,13 +219,14 @@
                 outputTable += "<tr class='" + "odd" +"'><td class='odd1'>" + TolParams[1] + "</td><td class='odd2'></td><td colspan='2' rowspan='1'><input type='text' id='Input_NoSync' onChange='UpdateValue(this.name,this.value,this.id)' name ='" + TolParams[1] + "' value='" + Dwg.GetParam(TolParams[1]).Value.StringValue + "' ></input></td></tr>";
 
                 //SE_PART_NUMBER Feat Parameter
-                if (DwgModels.Item(0).Descr.Type == pfcCreate("pfcModelType").MDL_ASSEMBLY) {
-                    var FeatComponants = oSession.GetModel(modelsName,pfcCreate("pfcModelType").MDL_ASSEMBLY).ListFeaturesByType(false, pfcCreate("pfcFeatureType").FEATTYPE_COMPONENT);
+                if (assembly != void null) {
+                    var FeatComponants = assembly.ListFeaturesByType(false, pfcCreate("pfcFeatureType").FEATTYPE_COMPONENT);
                     for (var i=0;i<FeatComponants.Count;i++)
                     {
+                        var Featname = FeatComponants.Item(i).ModelDescr.GetFullName();
                         if (FeatComponants.Item(i).GetParam("SE_PART_NUMBER") == void null) {
-                            FeatComponants.Item(i).CreateParam("SE_PART_NUMBER", createParamValueFromString(FeatComponants.Item(i).ModelDescr.InstanceName));
-                            Output += "<li>" + "SE_PART_NUMBER" + " : " + FeatComponants.Item(i).GetParam("SE_PART_NUMBER").Value.StringValue + " (create in assembly)</li>";
+                            FeatComponants.Item(i).CreateParam("SE_PART_NUMBER", CreateParamValue("STRING",String(Featname)));
+                            Output += "<li>" + "SE_PART_NUMBER" + " : " + String(FeatComponants.Item(i).GetParam("SE_PART_NUMBER").Value.StringValue) + " (create in assembly)</li>";
                         }
                     }
                 }
@@ -349,8 +356,10 @@
         WarningMsg(Params[i][0]);
         if (Params[i][1] != "sync" && Params[i][5] != "null") {
             outputTable += "<tr class='" + "odd" +"'><td class='odd1'>" + Params[i][0] + "</td><td>";
-            if (Params[i][4].length) { outputTable += "<button type='button' id='Input_Drw' onclick='UpdateValue(this.name,this.value,this.id,this.type)' name ='" + Params[i][0] + "' value='" + Params[i][4] + "'>"+ Params[i][4] +"</button>"; }
-            outputTable += "</td><td><input type='text' id='Input_Drw' onkeypress='handleKeyPress(event,this.name,this.value,this.id)' onChange='UpdateValue(this.name,this.value,this.id)' name ='" + Params[i][0] + "' value='" + Dwg.GetParam(Params[i][0]).Value.StringValue + "' ></input></td><td><input type='text' id='Input_Models' onChange='UpdateValue(this.name,this.value,this.id)' name ='" + Params[i][0] + "' value='" + oSession.GetModel(modelsName,pfcCreate("pfcModelType").MDL_PART).GetParam(Params[i][0]).Value.StringValue + "' ></input></td></tr>";
+            if (Params[i][4].length) { outputTable += "<button type='button' class='button' id='Input_Drw' onclick='UpdateValue(this.name,this.value,this.id,this.type)' name ='" + Params[i][0] + "' value='" + Params[i][4] + "'>"+ Params[i][4] +"</button><br>"; }
+            if (Params[i][5].length) { outputTable += "<button type='button' class='button' id='Input_Models' onclick='UpdateValue(this.name,this.value,this.id,this.type)' name ='" + Params[i][0] + "' value='" + Params[i][5] + "'>"+ Params[i][5] +"</button>"; }
+            outputTable += "</td><td colspan='2' rowspan='1'><input type='text' id='Input_Drw' onkeypress='handleKeyPress(event,this.name,this.value,this.id)' onChange='UpdateValue(this.name,this.value,this.id)' name ='" + Params[i][0] + "' value='" + Dwg.GetParam(Params[i][0]).Value.StringValue + "' ></input>";
+            outputTable += "<input type='text' id='Input_Models' onChange='UpdateValue(this.name,this.value,this.id)' name ='" + Params[i][0] + "' value='" + oSession.GetModel(modelsName,pfcCreate("pfcModelType").MDL_PART).GetParam(Params[i][0]).Value.StringValue + "' ></input></td></tr>";
         } else {
             outputTable += "<tr class='" + "odd" +"'><td class='odd1'>" + Params[i][0] + "</td><td>";
             if (Params[i][4].length) { outputTable += "<button type='button' id='Input_Drw' onclick='UpdateValue(this.name,this.value,this.id,this.type)' name ='" + Params[i][0] + "' value='" + Params[i][4] + "'>"+ Params[i][4] +"</button>"; }
@@ -462,6 +471,7 @@
         }
     }
     function pfcCreate (className)  {
+
         if (!pfcIsWindows()) {
             netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
         }
@@ -499,23 +509,23 @@
     \*====================================================================*/
     function createParamValueFromString (s /* string */)
     {
-      if (s.indexOf (".") == -1)
+        if (s.indexOf (".") == -1)
         {
-          var i = parseInt (s);
-          if (!isNaN(i))
-        return pfcCreate ("MpfcModelItem").CreateIntParamValue(i);
+            var i = parseInt (s);
+            if (!isNaN(i))
+            return pfcCreate ("MpfcModelItem").CreateIntParamValue(i);
         }
-      else
+        else
         {
-          var d = parseFloat (s);
-          if (!isNaN(d))
-        return pfcCreate ("MpfcModelItem").CreateDoubleParamValue(d);
+            var d = parseFloat (s);
+            if (!isNaN(d))
+            return pfcCreate ("MpfcModelItem").CreateDoubleParamValue(d);
         }
       if (s.toUpperCase() == "Y" || s.toUpperCase ()== "TRUE")
-        return pfcCreate ("MpfcModelItem").CreateBoolParamValue(true);
+            return pfcCreate ("MpfcModelItem").CreateBoolParamValue(true);
 
       if (s.toUpperCase() == "N" || s.toUpperCase ()== "FALSE")
-        return pfcCreate ("MpfcModelItem").CreateBoolParamValue(false);
+            return pfcCreate ("MpfcModelItem").CreateBoolParamValue(false);
 
       return pfcCreate ("MpfcModelItem").CreateStringParamValue(s);
     }
