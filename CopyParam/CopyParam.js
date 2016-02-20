@@ -106,7 +106,14 @@
             oSession.RunMacro("~ Command `ProCmdRegenAuto`");
 
         } else if (Dwg.Descr.Type == pfcCreate("pfcModelType").MDL_DRAWING) {
-        //Create list of all models on drawing
+            var browserSize = oSession.CurrentWindow.GetBrowserSize();
+            if (browserSize > 35.0) {
+                browserSize = 35.0;
+                oSession.CurrentWindow.SetBrowserSize(0.0);
+                oSession.CurrentWindow.SetBrowserSize(browserSize);
+            }
+            
+            //Create list of all models on drawing
             DwgModels = Dwg.ListModels();
             //Build set of links to click
             if (DwgModels.Count > 0) {
@@ -361,9 +368,10 @@
             outputTable += "</td><td colspan='2' rowspan='1'><input type='text' id='Input_Drw' onkeypress='handleKeyPress(event,this.name,this.value,this.id)' onChange='UpdateValue(this.name,this.value,this.id)' name ='" + Params[i][0] + "' value='" + Dwg.GetParam(Params[i][0]).Value.StringValue + "' ></input>";
             outputTable += "<input type='text' id='Input_Models' onChange='UpdateValue(this.name,this.value,this.id)' name ='" + Params[i][0] + "' value='" + oSession.GetModel(modelsName,pfcCreate("pfcModelType").MDL_PART).GetParam(Params[i][0]).Value.StringValue + "' ></input></td></tr>";
         } else {
-            outputTable += "<tr class='" + "odd" +"'><td class='odd1'>" + Params[i][0] + "</td><td>";
-            if (Params[i][4].length) { outputTable += "<button type='button' id='Input_Drw' onclick='UpdateValue(this.name,this.value,this.id,this.type)' name ='" + Params[i][0] + "' value='" + Params[i][4] + "'>"+ Params[i][4] +"</button>"; }
-            outputTable += "</td><td colspan='2' rowspan='1'><input type='text' id='Input_"+Params[i][1]+"' onkeypress='handleKeyPress(event,this.name,this.value,this.id)' onChange='UpdateValue(this.name,this.value,this.id)' name ='" + Params[i][0] + "' value='" + Dwg.GetParam(Params[i][0]).Value.StringValue + "' ></input></td></tr>";
+            if (Params[i][4].length) { outputTable += "<tr class='" + "odd" +"'><td class='odd1'>" + Params[i][0] + "</td>"; }
+            else { outputTable += "<tr class='" + "odd" +"'><td class='odd1' colspan='2' rowspan='1'>" + Params[i][0] + "</td>"; }
+            if (Params[i][4].length) { outputTable += "<td><button type='button' id='Input_Drw' onclick='UpdateValue(this.name,this.value,this.id,this.type)' name ='" + Params[i][0] + "' value='" + Params[i][4] + "'>"+ Params[i][4] +"</button></td>"; }
+            outputTable += "<td colspan='2' rowspan='1'><input type='text' id='Input_"+Params[i][1]+"' onkeypress='handleKeyPress(event,this.name,this.value,this.id)' onChange='UpdateValue(this.name,this.value,this.id)' name ='" + Params[i][0] + "' value='" + Dwg.GetParam(Params[i][0]).Value.StringValue + "' ></input></td></tr>";
         }
     }
 
@@ -470,17 +478,44 @@
         return false;
         }
     }
-    function pfcCreate (className)  {
-
-        if (!pfcIsWindows()) {
+    // Optimized pfcCreate
+    function pfcCreate (className) {
+        if (!pfcIsWindows())
             netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+        if (className.match(/^M?pfc/)) {
+
+            // Check global object cache first, then return that object
+            //
+            try {
+                if (className in global_class_cache) {
+                    return global_class_cache[className];
+                }
+            }
+            catch (e) {
+                // Probably no global_class_cache yet
+                global_class_cache = new Object();
+            }
+
         }
+
+        // Not in global object cache, create object
+        var obj = null;
+
         if (pfcIsWindows()) {
-            return new ActiveXObject ("pfc."+className);
-        } else {
-            ret = Components.classes ["@ptc.com/pfc/" + className + ";1"].createInstance();
-            return ret;
+            obj = new ActiveXObject("pfc."+className);
         }
+        else {
+            obj = Components.classes ["@ptc.com/pfc/" + className + ";1"].createInstance();
+        }
+
+        // Return created object
+        //
+        if (className.match(/^M?pfc/)) {
+            global_class_cache[className] = obj;
+        }
+
+        return obj;
     }
     //Utility Functions
     function CreateParamValue(typeAsString,val)
