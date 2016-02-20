@@ -377,9 +377,10 @@
 
     function writeDwgValue(j,k) {
         if (Dwg.GetParam(j) == void null)    { Dwg.CreateParam(j, createParamValueFromString("")); }
-        if (Dwg.GetParam(j).Value.StringValue == false || Dwg.GetParam(j).Value.StringValue != k) {
+        if (Dwg.GetParam(j).Value.StringValue != k) {
             //write defaut parm to dwg
             Dwg.GetParam(j).Value =                      pfcCreate("MpfcModelItem").CreateStringParamValue(k);
+            if (! k.length) k = "clear parameter";
             Output += "<li>" + j + " : " + k + "</li>";
         }
     }
