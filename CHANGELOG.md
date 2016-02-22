@@ -1,3 +1,14 @@
+## 0.7 (2016-02-22)
+
+Features:
+
+  - Add model rev default button
+  - Add more default material list
+
+Bugfixes:
+
+  - Fix program with only one prt
+
 ## 0.6 (2016-02-18)
 
 Features:

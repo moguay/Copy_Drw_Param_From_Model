@@ -106,12 +106,15 @@
             oSession.RunMacro("~ Command `ProCmdRegenAuto`");
 
         } else if (Dwg.Descr.Type == pfcCreate("pfcModelType").MDL_DRAWING) {
-            var browserSize = oSession.CurrentWindow.GetBrowserSize();
-            if (browserSize > 35.0) {
-                browserSize = 35.0;
-                oSession.CurrentWindow.SetBrowserSize(0.0);
-                oSession.CurrentWindow.SetBrowserSize(browserSize);
-            }
+            try {
+                // Browser window default size
+                var browserSize = oSession.CurrentWindow.GetBrowserSize();
+                if (browserSize > 35.0) {
+                    browserSize = 35.0;
+                    oSession.CurrentWindow.SetBrowserSize(0.0);
+                    oSession.CurrentWindow.SetBrowserSize(browserSize);
+                }
+            } catch(e) {}
             
             //Create list of all models on drawing
             DwgModels = Dwg.ListModels();
@@ -124,7 +127,7 @@
                                             assembly = oSession.GetModel(modelsName,pfcCreate("pfcModelType").MDL_ASSEMBLY);
                 if (assembly == void null)  assembly = oSession.GetModel(Dwg.InstanceName,pfcCreate("pfcModelType").MDL_ASSEMBLY);
 
-                                            prt = oSession.GetModel(modelsName,pfcCreate("pfcModelType").MDL_PART);
+                                            part = oSession.GetModel(modelsName,pfcCreate("pfcModelType").MDL_PART);
                 if (part == void null)      part = oSession.GetModel(Dwg.InstanceName,pfcCreate("pfcModelType").MDL_PART);
                 if (part == void null)      part = oSession.GetModel(assembly.InstanceName,pfcCreate("pfcModelType").MDL_PART);
 
@@ -150,10 +153,7 @@
                 outputTable += "<tbody>";
 
                 //Synchronize all Params Value
-                for (i=0;i<Params.length;i++)
-                {
-                    syncValues(i);
-                }
+                for (i=0;i<Params.length && syncValues(i);i++) { }
 
                 //Relalations
                 if (part != void null)      PrtRelation(part);
@@ -170,14 +170,14 @@
                 }
 
                 //Material
-                if (assembly == void null && prt != void null && DwgModels.Item(0).GetParam("SE_MATERIAL_1").Value.StringValue.length > 0) {
+                if (assembly == void null && part != void null && DwgModels.Item(0).GetParam("SE_MATERIAL_1").Value.StringValue.length > 0) {
                     //SE_Material_1 in PRT
                     Material = DwgModels.Item(0).GetParam("SE_MATERIAL_1").Value.StringValue;
                     
                     //ReWrite Table Function
                     ReWriteTable();
 
-                } else if (assembly != void null && prt != void null && oSession.GetModel(modelsName,pfcCreate("pfcModelType").MDL_PART).GetParam("SE_MATERIAL_1").Value.StringValue.length > 0) {
+                } else if (assembly != void null && part != void null && oSession.GetModel(modelsName,pfcCreate("pfcModelType").MDL_PART).GetParam("SE_MATERIAL_1").Value.StringValue.length > 0) {
                     //SE_Material_1 in ASM
                     Material = oSession.GetModel(modelsName,pfcCreate("pfcModelType").MDL_PART).GetParam("SE_MATERIAL_1").Value.StringValue;
 
@@ -305,7 +305,7 @@
     //-----------------
     function syncValues(i) {
         if (Dwg.InstanceName.indexOf(modelsName) > -1) {
-            if (assembly == void null && prt != void null) {
+            if (assembly == void null && part != void null) {
                 // DRW PARAM SYNC FROM MODEL
                 var PrtModel = oSession.GetModel(modelsName,pfcCreate("pfcModelType").MDL_PART);
                 //Create Parameter
@@ -321,7 +321,7 @@
                         Output += "<li>" + Params[i][0] + " : " + Dwg.GetParam(Params[i][0]).Value.StringValue + " (drw sync from submodel)</li>";
                     }
                 }
-            } else if (assembly != void null && prt != void null) {
+            } else if (assembly != void null && part != void null) {
                 // DRW PARAM SYNC FROM MODEL AND SUBMODEL
                 var SubPrtModel = oSession.GetModel(modelsName,pfcCreate("pfcModelType").MDL_PART);
                 var SubAsmModel = oSession.GetModel(modelsName,pfcCreate("pfcModelType").MDL_ASSEMBLY);
@@ -373,6 +373,8 @@
             if (Params[i][4].length) { outputTable += "<td><button type='button' id='Input_Drw' onclick='UpdateValue(this.name,this.value,this.id,this.type)' name ='" + Params[i][0] + "' value='" + Params[i][4] + "'>"+ Params[i][4] +"</button></td>"; }
             outputTable += "<td colspan='2' rowspan='1'><input type='text' id='Input_"+Params[i][1]+"' onkeypress='handleKeyPress(event,this.name,this.value,this.id)' onChange='UpdateValue(this.name,this.value,this.id)' name ='" + Params[i][0] + "' value='" + Dwg.GetParam(Params[i][0]).Value.StringValue + "' ></input></td></tr>";
         }
+        
+        return true;
     }
 
     function writeDwgValue(j,k) {
@@ -1032,3 +1034,20 @@
     }
 
     // mdlDescr.SetPath(workdir);
+    
+    // Snippet code (uses functions from pfcUtils.js) :
+    // Import drawing options
+    /*
+    function Import(){
+      var session = pfcCreate("MpfcCOMGlobal").GetProESession();
+      var mdl = session.CurrentModel;
+      try {
+     
+      var dtl_inst =  pfcCreate("pfcDWGSetupImportInstructions").Create();
+      mdl.Import("test.dtl", dtl_inst);
+      }
+      catch (err) {
+        alert(err.description);
+      }
+    }
+    */
