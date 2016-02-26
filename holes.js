@@ -10,7 +10,7 @@ function Main() {
 	var holesTable = document.getElementById("holesTable");
 	
 	objCurrentModel.RetrieveView("Default");
-	if (objCurrentModel.Descr.Type == pfcCreate("pfcModelType").MDL_PART & objCurrentModel.GetParam("SE_MATERIAL_1").Value.StringValue.substring(0, 8) == "HUA17334" ) {
+	if (objCurrentModel.Descr.Type == pfcCreate("pfcModelType").MDL_PART && objCurrentModel.GetParam("SE_MATERIAL_1").Value.StringValue.substring(0, 8) == "HUA17334" ) {
 		UI.innerHTML = objCurrentModel.InstanceName + " is a PCB<br />Material " + objCurrentModel.GetParam("SE_MATERIAL_1").Value.StringValue + "<br />" + arrModelHoles.Count + " holes found in the model to process<br />";
 		var outputTable = "<table><thead><tr><th>ID</th><th>State</th><th>Ecad hole type</th></tr></thead><tbody>";
 		for (var i = 0; i < arrModelHoles.Count; i++) {
@@ -19,23 +19,22 @@ function Main() {
 					var holeState = "New Hole";
 					arrModelHoles.Item(i).CreateParam("ECAD_HOLE_TYPE", createParamValueFromString("NPTH"));
 				} else {
-						if (arrModelHoles.Item(i).GetParam("ECAD_HOLE_TYPE").Value.StringValue == "") {
-							var holeState = "No value";
+						if (arrModelHoles.Item(i).GetParam("ECAD_HOLE_TYPE").Value.StringValue != "PTH" && arrModelHoles.Item(i).GetParam("ECAD_HOLE_TYPE").Value.StringValue != "NPTH" ) {
+							var holeState = "Not a valid value";
+							arrModelHoles.Item(i).GetParam("ECAD_HOLE_TYPE").Value = pfcCreate("MpfcModelItem").CreateStringParamValue("NPTH");
 						} else {
 							var holeState = "";
 						} 
 				}
 				var holeType = arrModelHoles.Item(i).GetParam("ECAD_HOLE_TYPE").Value.StringValue;
 				outputTable += "<tr class='" + ( i % 2  > 0 ? "odd" : "even") + "'>";
-				outputTable += "<td ><button onmouseover='highlightHole (" + i + ")' >" + arrModelHoles.Item(i).Id + "</button></td>";
+				outputTable += "<td class='theID'>" + arrModelHoles.Item(i).Id + "</td>";
 				outputTable += "<td>" + holeState + "</td>";
-				outputTable += "<td><select id='" + i + "' onchange='updateValue(this)' ><option value='NPTH' " + (holeType == "NPTH" ? "selected" : "") + ">NPTH</option><option value='PTH' " + (holeType == "PTH" ? "selected" : "") + ">PTH</option></select>";
+				outputTable += "<td><select onmouseover='highlightHole (" + i + ")' id='" + i + "' onchange='updateValue(this)' ><option value='NPTH' " + (holeType == "NPTH" ? "selected" : "") + ">NPTH</option><option value='PTH' " + (holeType == "PTH" ? "selected" : "") + ">PTH</option></select>";
 				outputTable += "</tr>";
-				// outputTable += "<tr class='" + ( i % 2  > 0 ? "odd" : "even") + "'><td class='theID'>" + arrModelHoles.Item(i).Id + "</td><td>" + holeState + "</td><td><select id='" + i + "' onchange='updateValue(this)' ><option value='NPTH' " + (holeType == "NPTH" ? "selected" : "") + ">NPTH</option><option value='PTH' " + (holeType == "PTH" ? "selected" : "") + ">PTH</option></select>";
 			}
 		}
 		holesTable.innerHTML = outputTable + "</tbody></table>";
-		addOnMouseOver();
 	} else {
 		UI.innerHTML = "The model  you are trying to process is not a PCB.";
 	}		
@@ -43,7 +42,7 @@ function Main() {
 
 function highlightHole (holeID) {
 	objCurrentWindow.Repaint();
-	pfcCreate ("MpfcSelect").CreateModelItemSelection(objCurrentModel.GetItemById(pfcCreate("pfcModelItemType").ITEM_FEATURE, arrModelHoles.Item(holeID).Id), null).Highlight(pfcCreate ("pfcStdColor").COLOR_PRESEL_HIGHLIGHT);
+	pfcCreate ("MpfcSelect").CreateModelItemSelection(objCurrentModel.GetItemById(pfcCreate("pfcModelItemType").ITEM_FEATURE, arrModelHoles.Item(holeID).Id), null).Highlight(pfcCreate ("pfcStdColor").COLOR_QUILT);
 }	
 
 function updateValue (element) {
@@ -91,14 +90,3 @@ if (s.indexOf (".") == -1) {
 
       return pfcCreate ("MpfcModelItem").CreateStringParamValue(s);
     }
-
-// function addOnMouseOver (){
-	// var tableCells = document.getElementsByTagName('td');
-	// for ( i in tableCells) {
-		// if (tableCells[i].className == "theID") {
-			// alert (">" + tableCells[i].innerHTML + "<");
-			// var theIDValue = parseInt(tableCells[i].innerHTML);
-			// tableCells[i].attachEvent("onmouseover",highlightHole(theIDValue));
-		// }
-	// }
-// }
