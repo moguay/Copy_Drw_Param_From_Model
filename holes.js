@@ -1,41 +1,55 @@
 var mGlob = pfcCreate("MpfcCOMGlobal");
-var oSession = mGlob.GetProESession();
-var Model = oSession.CurrentModel;
-var modelHoles = Model.ListFeaturesByType (false, pfcCreate ("pfcFeatureType").FEATTYPE_HOLE);
+var objSession = mGlob.GetProESession();
+var objCurrentModel = objSession.CurrentModel;
+var arrModelHoles = objCurrentModel.ListFeaturesByType (false, pfcCreate ("pfcFeatureType").FEATTYPE_HOLE);
+var objCurrentWindow = objSession.CurrentWindow;
 
 function Main() {
-	//Initialization Commands
+	var featStatusActive = pfcCreate("pfcFeatureStatus").FEAT_ACTIVE;
 	var UI = document.getElementById("UI");
 	var holesTable = document.getElementById("holesTable");
-	if (Model.Descr.Type == pfcCreate("pfcModelType").MDL_PART & Model.GetParam("SE_MATERIAL_1").Value.StringValue.substring(0, 8) == "HUA17334" ) {
-		UI.innerHTML = Model.InstanceName + " is a PCB<br />Material " + Model.GetParam("SE_MATERIAL_1").Value.StringValue + "<br />" + modelHoles.Count + " holes found in the model to process<br />";
-		var outputTable = "<table><thead><tr><th id='holeID'>ID</th><th id='holeState'>State</th><th id='holeType'>Ecad hole type</th></tr></thead><tbody>";
-		for (var i = 0; i < modelHoles.Count; i++) {
-				if (modelHoles.Item(i).GetParam("ECAD_HOLE_TYPE") == void null) {
-					var holeState = "Not set";
-					var holeValue= "NPTH";
-					modelHoles.Item(i).CreateParam("ECAD_HOLE_TYPE", createParamValueFromString(holeValue));
+	
+	objCurrentModel.RetrieveView("Default");
+	if (objCurrentModel.Descr.Type == pfcCreate("pfcModelType").MDL_PART & objCurrentModel.GetParam("SE_MATERIAL_1").Value.StringValue.substring(0, 8) == "HUA17334" ) {
+		UI.innerHTML = objCurrentModel.InstanceName + " is a PCB<br />Material " + objCurrentModel.GetParam("SE_MATERIAL_1").Value.StringValue + "<br />" + arrModelHoles.Count + " holes found in the model to process<br />";
+		var outputTable = "<table><thead><tr><th>ID</th><th>State</th><th>Ecad hole type</th></tr></thead><tbody>";
+		for (var i = 0; i < arrModelHoles.Count; i++) {
+			if (arrModelHoles.Item(i).Status == featStatusActive){
+					if (arrModelHoles.Item(i).GetParam("ECAD_HOLE_TYPE") == void null) {
+					var holeState = "New Hole";
+					arrModelHoles.Item(i).CreateParam("ECAD_HOLE_TYPE", createParamValueFromString("NPTH"));
 				} else {
-					var holeState = "";
-					var holeValue= modelHoles.Item(i).GetParam("ECAD_HOLE_TYPE").Value.StringValue;
+						if (arrModelHoles.Item(i).GetParam("ECAD_HOLE_TYPE").Value.StringValue == "") {
+							var holeState = "No value";
+						} else {
+							var holeState = "";
+						} 
 				}
-				outputTable += "<tr class='" + ( i % 2  > 0 ? "odd" : "even") + "'><td>" + modelHoles.Item(i).Id + "</td><td>" + holeState + "</td><td><input id='" + i + "' type='text'  value='" + holeValue + "' onfocus='highlightHole(this.id)' onchange='updateHoleValue(this.id, this.value)'></td></tr>";
+				var holeType = arrModelHoles.Item(i).GetParam("ECAD_HOLE_TYPE").Value.StringValue;
+				outputTable += "<tr class='" + ( i % 2  > 0 ? "odd" : "even") + "'>";
+				outputTable += "<td ><button onmouseover='highlightHole (" + i + ")' >" + arrModelHoles.Item(i).Id + "</button></td>";
+				outputTable += "<td>" + holeState + "</td>";
+				outputTable += "<td><select id='" + i + "' onchange='updateValue(this)' ><option value='NPTH' " + (holeType == "NPTH" ? "selected" : "") + ">NPTH</option><option value='PTH' " + (holeType == "PTH" ? "selected" : "") + ">PTH</option></select>";
+				outputTable += "</tr>";
+				// outputTable += "<tr class='" + ( i % 2  > 0 ? "odd" : "even") + "'><td class='theID'>" + arrModelHoles.Item(i).Id + "</td><td>" + holeState + "</td><td><select id='" + i + "' onchange='updateValue(this)' ><option value='NPTH' " + (holeType == "NPTH" ? "selected" : "") + ">NPTH</option><option value='PTH' " + (holeType == "PTH" ? "selected" : "") + ">PTH</option></select>";
+			}
 		}
 		holesTable.innerHTML = outputTable + "</tbody></table>";
-		oSession.GetModelWindow(Model).Repaint(); 
+		addOnMouseOver();
 	} else {
 		UI.innerHTML = "The model  you are trying to process is not a PCB.";
-	}
+	}		
 }
 
 function highlightHole (holeID) {
-	oSession.GetModelWindow(Model).Repaint(); 
-	pfcCreate ("MpfcSelect").CreateModelItemSelection(Model.GetItemById(pfcCreate("pfcModelItemType").ITEM_FEATURE, modelHoles.Item(parseInt(holeID)).Id), null).Display();
-}
+	objCurrentWindow.Repaint();
+	pfcCreate ("MpfcSelect").CreateModelItemSelection(objCurrentModel.GetItemById(pfcCreate("pfcModelItemType").ITEM_FEATURE, arrModelHoles.Item(holeID).Id), null).Highlight(pfcCreate ("pfcStdColor").COLOR_PRESEL_HIGHLIGHT);
+}	
 
-function updateHoleValue (holeID, newValue) {
-	modelHoles.Item(holeID).GetParam("ECAD_HOLE_TYPE").Value = pfcCreate("MpfcModelItem").CreateStringParamValue(newValue);
-}
+function updateValue (element) {
+	arrModelHoles.Item(parseInt(element.id)).GetParam("ECAD_HOLE_TYPE").Value = pfcCreate("MpfcModelItem").CreateStringParamValue(element.value);
+	objSession.GetModelWindow(Model).Refresh(); 
+ }
 
 
 function pfcIsWindows () {
@@ -57,27 +71,8 @@ function pfcCreate (className)  {
 	}
 }
 
-function CreateParamValue(typeAsString,val)
-    {
-        switch (typeAsString)
-        {
-            case "STRING":
-            return pfcCreate("MpfcModelItem").CreateStringParamValue(val);
-            break;
-            case "NUMBER":
-            return pfcCreate("MpfcModelItem").CreateDoubleParamValue(val);
-            break;
-            case "BOOLEAN":
-            return pfcCreate("MpfcModelItem").CreateBoolParamValue(val);
-            break;
-            case "INTEGER":
-            return pfcCreate("MpfcModelItem").CreateIntParamValue(val);
-            break;
-        }
-    }
-
 function createParamValueFromString (s /* string */){
-	if (s.indexOf (".") == -1) {
+if (s.indexOf (".") == -1) {
           var i = parseInt (s);
           if (!isNaN(i))
         return pfcCreate ("MpfcModelItem").CreateIntParamValue(i);
@@ -96,3 +91,14 @@ function createParamValueFromString (s /* string */){
 
       return pfcCreate ("MpfcModelItem").CreateStringParamValue(s);
     }
+
+// function addOnMouseOver (){
+	// var tableCells = document.getElementsByTagName('td');
+	// for ( i in tableCells) {
+		// if (tableCells[i].className == "theID") {
+			// alert (">" + tableCells[i].innerHTML + "<");
+			// var theIDValue = parseInt(tableCells[i].innerHTML);
+			// tableCells[i].attachEvent("onmouseover",highlightHole(theIDValue));
+		// }
+	// }
+// }
