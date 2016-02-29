@@ -4,6 +4,7 @@ Features:
 
   - Add model rev default button
   - Add more default material list
+  - Now works with models without the same name (in degraded mode: manual only, no sync)
 
 Bugfixes:
 

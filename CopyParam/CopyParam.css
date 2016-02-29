@@ -151,6 +151,16 @@
         /*width: 100%;*/
     }
     
+    #export {
+        width: 24%;
+        background-color:#42B4E6;
+    }
+    
+    #open {
+        width: 97%;
+        background-color:#CBE643;
+    }
+    
     /*#button:hover, .button:hover, button:hover {
         border: 1px solid white;
         background-color:#80d4ff;

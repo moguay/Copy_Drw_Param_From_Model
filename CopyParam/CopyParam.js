@@ -10,7 +10,11 @@
     Params[0] = new Array("SE_DESIGNER",            "nosync",   "default",  "default",  DesignerName,   "null");
     Params[1] = new Array("SE_APPROVER",            "nosync",   "default",  "manual",   AppoverName,    "null");
     Params[2] = new Array("SE_DATE",                "nosync",   "default",  "default",  Today,          "null");
+    if (DrawingRev == ModelsRev) {
+    Params[3] = new Array("SE_REVISION",            "sync",     "default",  "manual",   DrawingRev,     ModelsRev);
+    } else {
     Params[3] = new Array("SE_REVISION",            "nosync",   "default",  "manual",   DrawingRev,     ModelsRev);
+    }
     Params[4] = new Array("SE_DESCRIPTION_ENGLISH", "sync",     "manual",   "manual",   "",             "");
     Params[5] = new Array("SE_DESCRIPTION_LOCAL",   "sync",     "manual",   "manual",   "",             "");
     Params[6] = new Array("SE_PROJECT",             "sync",     "default",  "manual",   ProjectName,    ProjectName);
@@ -43,22 +47,64 @@
     //materialList for sub function
     var matList
     if (materialList != void null) matList = materialList;
+    
+    var exportName;
 
     function CopyParam()
     {
+        try {
+            // Browser window default size
+            var browserSize = oSession.CurrentWindow.GetBrowserSize();
+            if (browserSize > 35.0) {
+                browserSize = 35.0;
+                oSession.CurrentWindow.SetBrowserSize(0.0);
+                oSession.CurrentWindow.SetBrowserSize(browserSize);
+            }
+        } catch(e) {}
+            
         if (CurrentModel == void null) {
             //Inform user of problem
             warning.innerHTML="YOU CAN ONLY RUN THIS APPLICATION ON MODEL";
             document.getElementById("fieldset1").style.border = "2px solid red";
             document.getElementById("warning").style.color = "red";
-            
+
         } else if (Prt.Descr.Type == pfcCreate("pfcModelType").MDL_PART) {
 
             modelsName = Prt.InstanceName;
 
             part = oSession.GetModel(modelsName,pfcCreate("pfcModelType").MDL_PART);
 
-            AssignMaterial();
+            //Create material Select List
+            if (part != void null) {
+                outputTable += "<tr class='" + "odd" +"'><td class='odd1'>" + "MATERIAL" + "</td><td class='odd2'></td><td colspan='3' rowspan='1'>";
+                outputTable += "<select name='select' id='Select_Def' onchange='AssignMaterial(this)'>";
+                var curMat
+                if (part != void null) { if (part.CurrentMaterial) curMat = part.CurrentMaterial.Name; }
+                if (curMat == void null || curMat.toUpperCase() == "UNDEF") {
+                    outputTable += "<option selected></option>"
+                } else {
+                    outputTable += "<option></option>"
+                }
+
+                for (var i=0;i<matList.length;i++) {
+                    var space = "";
+                    if ( matList[i][0].length < 10 ) { for (j=0;(10 - j - matList[i][0].length)>0;j++) { var space = space + "&nbsp" } }
+
+                    if (curMat != void null && curMat.toUpperCase() == matList[i][0].toUpperCase()) {
+                        outputTable += "<option value='"+ matList[i][0] +"' selected>" + matList[i][0] + space + " - "+ matList[i][1] + "</option>"
+                    } else {
+                        outputTable += "<option value='"+ matList[i][0] +"'>" + matList[i][0] + space + " - "+ matList[i][1] + "</option>"
+                    }
+                }
+                outputTable += "</select>";
+                outputTable += "</td></tr>";
+            }
+            
+            outputTable += "</tbody></table>";
+
+            document.getElementById("ManualUpdateParameters").innerHTML = "<fieldset id='fieldset'><legend>Manual Configuration - " + Dwg.InstanceName  + " : "  + Dwg.GetParam("SE_DESCRIPTION_ENGLISH").Value.StringValue + "</legend>" + outputTable + "</fieldset>";
+            document.getElementById("ManualUpdateParameters").innerHTML += "<fieldset id='fieldset'><legend>Export</legend><button type='button' class='button' id='export' onclick='Export()' name='export' value='export'>FULL Export</button><button type='button' class='button' id='export' onclick='CreatePDF()' name='export' value='export'>PDF Export</button><button type='button' class='button' id='export' onclick='CreateSTEP()' name='export' value='export'>STEP Export</button><button type='button' class='button' id='export' onclick='CreateDXF()' name='export' value='export'>DXF Export</button></fieldset>";
+
         /*
             //Holes highlight
             oSession.CurrentWindow.Repaint();
@@ -82,6 +128,12 @@
             oSession.RunMacro("~ Command `ProCmdRegenAuto`");
         */
         } else if (Asm.Descr.Type == pfcCreate("pfcModelType").MDL_ASSEMBLY) {
+            
+            modelsName = Prt.InstanceName;
+            
+            part = oSession.GetModel(modelsName,pfcCreate("pfcModelType").MDL_PART);
+            assembly = oSession.GetModel(modelsName,pfcCreate("pfcModelType").MDL_ASSEMBLY);
+            
             //SE_PART_NUMBER Feat Parameter
             var FeatComponants = oSession.GetModel(Asm.InstanceName,pfcCreate("pfcModelType").MDL_ASSEMBLY).ListFeaturesByType(false, pfcCreate("pfcFeatureType").FEATTYPE_COMPONENT);
             for (var i=0;i<FeatComponants.Count;i++)
@@ -91,6 +143,38 @@
                     Output += "<li>" + "SE_PART_NUMBER" + " : " + FeatComponants.Item(i).GetParam("SE_PART_NUMBER").Value.StringValue + " (create in assembly)</li>";
                 }
             }
+            
+            //Create material Select List
+            if (assembly != void null) {
+                outputTable += "<tr class='" + "odd" +"'><td class='odd1'>" + "MATERIAL" + "</td><td class='odd2'></td><td colspan='3' rowspan='1'>";
+                outputTable += "<select name='select' id='Select_Def' onchange='AssignMaterial(this)'>";
+                var curMat
+                if (part != void null) { if (part.CurrentMaterial) curMat = part.CurrentMaterial.Name; }
+                if (curMat == void null || curMat.toUpperCase() == "UNDEF") {
+                    outputTable += "<option selected></option>"
+                } else {
+                    outputTable += "<option></option>"
+                }
+
+                for (var i=0;i<matList.length;i++) {
+                    var space = "";
+                    if ( matList[i][0].length < 10 ) { for (j=0;(10 - j - matList[i][0].length)>0;j++) { var space = space + "&nbsp" } }
+
+                    if (curMat != void null && curMat.toUpperCase() == matList[i][0].toUpperCase()) {
+                        outputTable += "<option value='"+ matList[i][0] +"' selected>" + matList[i][0] + space + " - "+ matList[i][1] + "</option>"
+                    } else {
+                        outputTable += "<option value='"+ matList[i][0] +"'>" + matList[i][0] + space + " - "+ matList[i][1] + "</option>"
+                    }
+                }
+                outputTable += "</select>";
+                outputTable += "</td></tr>";
+            }
+            
+            outputTable += "</tbody></table>";
+
+            document.getElementById("ManualUpdateParameters").innerHTML = "<fieldset id='fieldset'><legend>Manual Configuration - " + Dwg.InstanceName  + " : "  + Dwg.GetParam("SE_DESCRIPTION_ENGLISH").Value.StringValue + "</legend>" + outputTable + "</fieldset>";
+            document.getElementById("ManualUpdateParameters").innerHTML += "<fieldset id='fieldset'><legend>Export</legend><button type='button' class='button' id='export' onclick='Export()' name='export' value='export'>FULL Export</button><button type='button' class='button' id='export' onclick='CreatePDF()' name='export' value='export'>PDF Export</button><button type='button' class='button' id='export' onclick='CreateSTEP()' name='export' value='export'>STEP Export</button><button type='button' class='button' id='export' onclick='CreateDXF()' name='export' value='export'>DXF Export</button></fieldset>";
+
 
             //Final result
             if (Output == "<ul>") {
@@ -106,16 +190,6 @@
             oSession.RunMacro("~ Command `ProCmdRegenAuto`");
 
         } else if (Dwg.Descr.Type == pfcCreate("pfcModelType").MDL_DRAWING) {
-            try {
-                // Browser window default size
-                var browserSize = oSession.CurrentWindow.GetBrowserSize();
-                if (browserSize > 35.0) {
-                    browserSize = 35.0;
-                    oSession.CurrentWindow.SetBrowserSize(0.0);
-                    oSession.CurrentWindow.SetBrowserSize(browserSize);
-                }
-            } catch(e) {}
-            
             //Create list of all models on drawing
             DwgModels = Dwg.ListModels();
             //Build set of links to click
@@ -149,8 +223,20 @@
 
                 //Table Parameters Header
                 outputTable += "<table>";
-                outputTable += "<thead><tr><th scope='col'>Parameters</th><th scope='col'>default</th><th scope='col' colspan='2' rowspan='1'>values</th></tr></thead>";
+                outputTable += "<thead><tr><th scope='col'>Parameters</th><th scope='col'>default</th><th scope='col' colspan='2' rowspan='1'>values</th><th><button type='button' class='button' id='refresh' onclick='location.reload()' name='refresh' value='refresh'>Refresh</button></th></tr></thead>";
                 outputTable += "<tbody>";
+
+                if (Dwg.InstanceName.indexOf(modelsName) == -1) {
+                    warning.innerHTML += "Drawing and Model do not have the same name. Parameter need to be set manually<br />";
+                    document.getElementById("fieldset1").style.border = "2px solid red";
+                    document.getElementById("warning").style.color = "red";
+                }
+
+                if (assembly != void null && part == void null) {
+                    warning.innerHTML += "Model and sub Model do not have the same name. Parameter need to be set manually<br />";
+                    document.getElementById("fieldset1").style.border = "2px solid red";
+                    document.getElementById("warning").style.color = "red";
+                }
 
                 //Synchronize all Params Value
                 for (i=0;i<Params.length && syncValues(i);i++) { }
@@ -169,61 +255,65 @@
                     document.getElementById("warning").style.color = "red";
                 }
 
-                //Material
-                if (assembly == void null && part != void null && DwgModels.Item(0).GetParam("SE_MATERIAL_1").Value.StringValue.length > 0) {
-                    //SE_Material_1 in PRT
-                    Material = DwgModels.Item(0).GetParam("SE_MATERIAL_1").Value.StringValue;
-                    
-                    //ReWrite Table Function
-                    ReWriteTable();
+                if (Dwg.InstanceName.indexOf(modelsName) > -1 && part != void null) {
+                    //Material
+                    if (assembly == void null && part != void null && DwgModels.Item(0).GetParam("SE_MATERIAL_1").Value.StringValue.length > 0) {
 
-                } else if (assembly != void null && part != void null && oSession.GetModel(modelsName,pfcCreate("pfcModelType").MDL_PART).GetParam("SE_MATERIAL_1").Value.StringValue.length > 0) {
-                    //SE_Material_1 in ASM
-                    Material = oSession.GetModel(modelsName,pfcCreate("pfcModelType").MDL_PART).GetParam("SE_MATERIAL_1").Value.StringValue;
+                        //SE_Material_1 in PRT
+                        Material = DwgModels.Item(0).GetParam("SE_MATERIAL_1").Value.StringValue;
 
-                    //ReWrite Table Function
-                    ReWriteTable();
+                        //ReWrite Table Function
+                        ReWriteTable();
 
-                } else {
-                    warning.innerHTML += "Material in PRT not found<br />";
-                    document.getElementById("fieldset1").style.border = "2px solid red";
-                    document.getElementById("warning").style.color = "red";
-                }
-                outputTable += "<tr class='" + "odd" +"'><td class='odd1'>" + "SE_MATERIAL_1" + "</td><td class='odd2'></td><td colspan='2' rowspan='1'><input type='text' id='Input_NoSync' name ='" + "SE_MATERIAL_1" + "' value='" + Material + "' ></input></td></tr>";
-                WarningMsg("SE_MATERIAL_1");
+                    } else if (assembly != void null && part != void null && oSession.GetModel(modelsName,pfcCreate("pfcModelType").MDL_PART).GetParam("SE_MATERIAL_1").Value.StringValue.length > 0) {
 
-                //Tolerance
-                var TolParams = new Array("SE_TOLERANCING","SE_GENERAL_TOL");
-                if (Material != void null) {
-                    // ARTICLE TYPE 880 || COPPER ALU || COPPER CU 250 || COPPER CU 240
-                    if (modelsName.indexOf("880-") > -1 || Material.indexOf("HUA10488") > -1 || Material.indexOf("1CPR011961") > -1 || Material.indexOf("1CPR013231") > -1) {
-                        var TolValue = new Array("0S-GTS-BUSBARS","");
-                        writeDwgValue(TolParams[0],TolValue[0]);
-                        writeDwgValue(TolParams[1],TolValue[1]);
+                        //SE_Material_1 in ASM
+                        Material = oSession.GetModel(modelsName,pfcCreate("pfcModelType").MDL_PART).GetParam("SE_MATERIAL_1").Value.StringValue;
 
-                        //Parent PRT Session ID
-                        var SID=oSession.GetModel(modelsName,pfcCreate("pfcModelType").MDL_PART).RelationId
-                        var CopperNoteParams = new Array("NOTES:" ,"- THICKNESS: &SMT_THICKNESS:"+SID+"[.1]" ,"- BEND RADIUS: &SMT_THICKNESS:"+SID+"[.1]" ,"  FULL ROUND EDGE BUSBAR" ,"  UNLESS SPECIFIED OTHERWISE");
+                        //ReWrite Table Function
+                        ReWriteTable();
 
-                        //Create Tickness Note
-                        //createSurfNote(CopperNoteParams);
-
-                    // ARTICLE TYPE 870 || GALVA || EZ || ALU || STAINLESS
-                    } else if (modelsName.indexOf("870-") > -1 || Material.indexOf("HUA10316") > -1 || Material.indexOf("1STE010897") > -1 || Material.indexOf("HUA12808") > -1 || Material.indexOf("1STE009949") > -1) {
-                        var TolValue = new Array("0S-GTS-SHEETM","");
-                        writeDwgValue(TolParams[0],TolValue[0]);
-                        writeDwgValue(TolParams[1],TolValue[1]);
-                    // ARTICLE TYPE 876 || PC || PVC || PMMA || MAKROLON
-                    } else if (modelsName.indexOf("876-") > -1 || Material.indexOf("1TPM009040") > -1 || Material.indexOf("HUA35575") > -1 || Material.indexOf("1TPM006917") > -1 || Material.indexOf("HUA19947") > -1) {
-                        var TolValue = new Array("0S-GTS-PASTSHEET","");
-                        writeDwgValue(TolParams[0],TolValue[0]);
-                        writeDwgValue(TolParams[1],TolValue[1]);
+                    } else {
+                        warning.innerHTML += "Material in PRT not found<br />";
+                        document.getElementById("fieldset1").style.border = "2px solid red";
+                        document.getElementById("warning").style.color = "red";
                     }
-                }
+                    outputTable += "<tr class='" + "odd" +"'><td class='odd1'>" + "SE_MATERIAL_1" + "</td><td class='odd2'></td><td colspan='3' rowspan='1'><input type='text' id='Input_NoSync' name ='" + "SE_MATERIAL_1" + "' value='" + Material + "' ></input></td></tr>";
+                    WarningMsg("SE_MATERIAL_1");
 
-                WarningMsg(TolParams[0]);
-                outputTable += "<tr class='" + "odd" +"'><td class='odd1'>" + TolParams[0] + "</td><td class='odd2'></td><td colspan='2' rowspan='1'><input type='text' id='Input_NoSync' onChange='UpdateValue(this.name,this.value,this.id)' name ='" + TolParams[0] + "' value='" + Dwg.GetParam(TolParams[0]).Value.StringValue + "' ></input></td></tr>";
-                outputTable += "<tr class='" + "odd" +"'><td class='odd1'>" + TolParams[1] + "</td><td class='odd2'></td><td colspan='2' rowspan='1'><input type='text' id='Input_NoSync' onChange='UpdateValue(this.name,this.value,this.id)' name ='" + TolParams[1] + "' value='" + Dwg.GetParam(TolParams[1]).Value.StringValue + "' ></input></td></tr>";
+                    //Tolerance
+                    var TolParams = new Array("SE_TOLERANCING","SE_GENERAL_TOL");
+                    if (Material != void null) {
+                        // ARTICLE TYPE 880 || COPPER ALU || COPPER CU 250 || COPPER CU 240
+                        if (modelsName.indexOf("880-") > -1 || Material.indexOf("HUA10488") > -1 || Material.indexOf("1CPR011961") > -1 || Material.indexOf("1CPR013231") > -1) {
+                            var TolValue = new Array("0S-GTS-BUSBARS","");
+                            writeDwgValue(TolParams[0],TolValue[0]);
+                            writeDwgValue(TolParams[1],TolValue[1]);
+
+                            //Parent PRT Session ID
+                            var SID=oSession.GetModel(modelsName,pfcCreate("pfcModelType").MDL_PART).RelationId
+                            var CopperNoteParams = new Array("NOTES:" ,"- THICKNESS: &SMT_THICKNESS:"+SID+"[.1]" ,"- BEND RADIUS: &SMT_THICKNESS:"+SID+"[.1]" ,"  FULL ROUND EDGE BUSBAR" ,"  UNLESS SPECIFIED OTHERWISE");
+
+                            //Create Tickness Note
+                            //createSurfNote(CopperNoteParams);
+
+                        // ARTICLE TYPE 870 || GALVA || EZ || ALU || STAINLESS
+                        } else if (modelsName.indexOf("870-") > -1 || Material.indexOf("HUA10316") > -1 || Material.indexOf("1STE010897") > -1 || Material.indexOf("HUA12808") > -1 || Material.indexOf("1STE009949") > -1) {
+                            var TolValue = new Array("0S-GTS-SHEETM","");
+                            writeDwgValue(TolParams[0],TolValue[0]);
+                            writeDwgValue(TolParams[1],TolValue[1]);
+                        // ARTICLE TYPE 876 || PC || PVC || PMMA || MAKROLON
+                        } else if (modelsName.indexOf("876-") > -1 || Material.indexOf("1TPM009040") > -1 || Material.indexOf("HUA35575") > -1 || Material.indexOf("1TPM006917") > -1 || Material.indexOf("HUA19947") > -1) {
+                            var TolValue = new Array("0S-GTS-PASTSHEET","");
+                            writeDwgValue(TolParams[0],TolValue[0]);
+                            writeDwgValue(TolParams[1],TolValue[1]);
+                        }
+                    }
+
+                    WarningMsg(TolParams[0]);
+                    outputTable += "<tr class='" + "odd" +"'><td class='odd1'>" + TolParams[0] + "</td><td class='odd2'></td><td colspan='3' rowspan='1'><input type='text' id='Input_NoSync' onChange='UpdateValue(this.name,this.value,this.id)' name ='" + TolParams[0] + "' value='" + Dwg.GetParam(TolParams[0]).Value.StringValue + "' ></input></td></tr>";
+                    outputTable += "<tr class='" + "odd" +"'><td class='odd1'>" + TolParams[1] + "</td><td class='odd2'></td><td colspan='3' rowspan='1'><input type='text' id='Input_NoSync' onChange='UpdateValue(this.name,this.value,this.id)' name ='" + TolParams[1] + "' value='" + Dwg.GetParam(TolParams[1]).Value.StringValue + "' ></input></td></tr>";
+                }
 
                 //SE_PART_NUMBER Feat Parameter
                 if (assembly != void null) {
@@ -239,28 +329,30 @@
                 }
 
                 //Create material Select List
-                outputTable += "<tr class='" + "odd" +"'><td class='odd1'>" + "MATERIAL" + "</td><td class='odd2'></td><td colspan='2' rowspan='1'>";
-                outputTable += "<select name='select' id='Select_Def' onchange='AssignMaterial(this)'>";
-                var curMat
-                if (part.CurrentMaterial) curMat = part.CurrentMaterial.Name;
-                if (curMat == void null || curMat.toUpperCase() == "UNDEF") {
-                    outputTable += "<option selected></option>"
-                } else {
-                    outputTable += "<option></option>"
-                }
-
-                for (var i=0;i<matList.length;i++) {
-                    var space = "";
-                    if ( matList[i][0].length < 10 ) { for (j=0;(10 - j - matList[i][0].length)>0;j++) { var space = space + "&nbsp" } }
-
-                    if (curMat != void null && curMat.toUpperCase() == matList[i][0].toUpperCase()) {
-                        outputTable += "<option value='"+ matList[i][0] +"' selected>" + matList[i][0] + space + " - "+ matList[i][1] + "</option>"
+                if (Dwg.InstanceName.indexOf(modelsName) > -1 && part != void null) {
+                    outputTable += "<tr class='" + "odd" +"'><td class='odd1'>" + "MATERIAL" + "</td><td class='odd2'></td><td colspan='3' rowspan='1'>";
+                    outputTable += "<select name='select' id='Select_Def' onchange='AssignMaterial(this)'>";
+                    var curMat
+                    if (part != void null) { if (part.CurrentMaterial) curMat = part.CurrentMaterial.Name; }
+                    if (curMat == void null || curMat.toUpperCase() == "UNDEF") {
+                        outputTable += "<option selected></option>"
                     } else {
-                        outputTable += "<option value='"+ matList[i][0] +"'>" + matList[i][0] + space + " - "+ matList[i][1] + "</option>"
+                        outputTable += "<option></option>"
                     }
+
+                    for (var i=0;i<matList.length;i++) {
+                        var space = "";
+                        if ( matList[i][0].length < 10 ) { for (j=0;(10 - j - matList[i][0].length)>0;j++) { var space = space + "&nbsp" } }
+
+                        if (curMat != void null && curMat.toUpperCase() == matList[i][0].toUpperCase()) {
+                            outputTable += "<option value='"+ matList[i][0] +"' selected>" + matList[i][0] + space + " - "+ matList[i][1] + "</option>"
+                        } else {
+                            outputTable += "<option value='"+ matList[i][0] +"'>" + matList[i][0] + space + " - "+ matList[i][1] + "</option>"
+                        }
+                    }
+                    outputTable += "</select>";
+                    outputTable += "</td></tr>";
                 }
-                outputTable += "</select>";
-                outputTable += "</td></tr>";
 
             } else {
                 document.getElementById("warning").innerHTML +=  DwgModels.Count + " models found in the drawing. Not compliant with PIM rules<br />";
@@ -268,8 +360,14 @@
             }
 
             //Final result
-            if (Output == "<ul>") {
+            if (Dwg.InstanceName.indexOf(modelsName) == -1 || part == void null) {
+                Output += "Manual Mode Only !</ul>";
+            } else if (Output == "<ul>" && !document.getElementById("warning").innerHTML.length) {
                 Output += "All done, Nothing to do !</ul>";
+                //CreateSTEP();
+                //CreatePDF();
+            } else if (document.getElementById("warning").innerHTML.length) {
+                Output += "complete the fields manually to finish !</ul>";
             } else {
                 Output += "Done !</ul>";
             }
@@ -279,7 +377,12 @@
 
             outputTable += "</tbody></table>";
 
-            document.getElementById("ManualUpdateParameters").innerHTML = "<fieldset id='fieldset'><legend>Manual Configuration - " + Dwg.InstanceName  + " : "  + oSession.GetModel(part.InstanceName,pfcCreate("pfcModelType").MDL_PART).GetParam("SE_DESCRIPTION_ENGLISH").Value.StringValue + "</legend>" + outputTable + "</fieldset>";
+            document.getElementById("ManualUpdateParameters").innerHTML = "<fieldset id='fieldset'><legend>Manual Configuration - " + Dwg.InstanceName  + " : "  + Dwg.GetParam("SE_DESCRIPTION_ENGLISH").Value.StringValue + "</legend>" + outputTable + "</fieldset>";
+            document.getElementById("ManualUpdateParameters").innerHTML += "<fieldset id='fieldset'><legend>Export</legend><button type='button' class='button' id='export' onclick='Export()' name='export' value='export'>FULL Export</button><button type='button' class='button' id='export' onclick='CreatePDF()' name='export' value='export'>PDF Export</button><button type='button' class='button' id='export' onclick='CreateSTEP()' name='export' value='export'>STEP Export</button><button type='button' class='button' id='export' onclick='CreateDXF()' name='export' value='export'>DXF Export</button></br><button type='button' class='open' id='open' onclick='OpenExportDirectory()' name='open' value='open'>Open export directory</button></fieldset>";
+            //<table><thead></thead><tbody>";
+            //document.getElementById("ManualUpdateParameters").innerHTML += "<tr><td>aa<button type='button' class='button' id='export' onclick='Export()' name='export' value='export'>FULL Export to STEP and PDF</button></td>"
+            //document.getElementById("ManualUpdateParameters").innerHTML += "<td>aa<button type='button' class='button' id='export' onclick='CreatePDF()' name='export' value='export'>Export to PDF</button></td>"
+            //document.getElementById("ManualUpdateParameters").innerHTML += "</tr></tbody></table></fieldset>";
 
             //Refresh Dawing Sheets,Tables,Draft and repaint
             oSession.RunMacro("~ Command `ProCmdDwgUpdateSheets`");
@@ -304,23 +407,31 @@
     //Program Functions
     //-----------------
     function syncValues(i) {
-        if (Dwg.InstanceName.indexOf(modelsName) > -1) {
-            if (assembly == void null && part != void null) {
+        //if (Dwg.InstanceName.indexOf(modelsName) > -1) {
+            if (assembly != void null && part == void null) {
+                //Create Parameter
+                if (Dwg.GetParam(Params[i][0]) == void null         && Params[i][4] != "null")  { Dwg.CreateParam(Params[i][0], createParamValueFromString("")); }
+
+            } else if (assembly == void null && part != void null) {
                 // DRW PARAM SYNC FROM MODEL
                 var PrtModel = oSession.GetModel(modelsName,pfcCreate("pfcModelType").MDL_PART);
                 //Create Parameter
                 if (PrtModel.GetParam(Params[i][0]) == void null    && Params[i][5] != "null")  { PrtModel.CreateParam(Params[i][0], createParamValueFromString("")); }
                 if (Dwg.GetParam(Params[i][0]) == void null         && Params[i][4] != "null")  { Dwg.CreateParam(Params[i][0], createParamValueFromString("")); }
-                //Set Default Value
-                if (Params[i][5] != "null" && PrtModel.GetParam(Params[i][0]).Value.StringValue != Params[i][5]) { if ((PrtModel.GetParam(Params[i][0]).Value.StringValue.length == 0   && Params[i][2] == "default") || (PrtModel.GetParam(Params[i][0]).Value.StringValue.length > 0   && Params[i][3] == "default")) { PrtModel.GetParam(Params[i][0]).Value = pfcCreate("MpfcModelItem").CreateStringParamValue(Params[i][5]);   Output += "<li>" + Params[i][0] + " : " + Params[i][5] + " (prt sync with default value)</li>"; } }
-                if (Params[i][4] != "null" && Dwg.GetParam(Params[i][0]).Value.StringValue != Params[i][4])      { if ((Dwg.GetParam(Params[i][0]).Value.StringValue.length == 0        && Params[i][2] == "default") || (Dwg.GetParam(Params[i][0]).Value.StringValue.length > 0        && Params[i][3] == "default")) { Dwg.GetParam(Params[i][0]).Value = pfcCreate("MpfcModelItem").CreateStringParamValue(Params[i][4]);        Output += "<li>" + Params[i][0] + " : " + Params[i][4] + " (drw sync with default value)</li>"; } }
-                //DRW PARAM SYNC FROM PRT
-                if (Params[i][1] == "sync") {
-                    if (Dwg.GetParam(Params[i][0]).Value.StringValue != DwgModels.Item(0).GetParam(Params[i][0]).Value.StringValue) {
-                        Dwg.GetParam(Params[i][0]).Value = DwgModels.Item(0).GetParam(Params[i][0]).Value;
-                        Output += "<li>" + Params[i][0] + " : " + Dwg.GetParam(Params[i][0]).Value.StringValue + " (drw sync from submodel)</li>";
+
+                if (Dwg.InstanceName.indexOf(modelsName) > -1) {
+                    //Set Default Value
+                    if (Params[i][5] != "null" && PrtModel.GetParam(Params[i][0]).Value.StringValue != Params[i][5]) { if ((PrtModel.GetParam(Params[i][0]).Value.StringValue.length == 0   && Params[i][2] == "default") || (PrtModel.GetParam(Params[i][0]).Value.StringValue.length > 0   && Params[i][3] == "default")) { PrtModel.GetParam(Params[i][0]).Value = pfcCreate("MpfcModelItem").CreateStringParamValue(Params[i][5]);   Output += "<li>" + Params[i][0] + " : " + Params[i][5] + " (prt sync with default value)</li>"; } }
+                    if (Params[i][4] != "null" && Dwg.GetParam(Params[i][0]).Value.StringValue != Params[i][4])      { if ((Dwg.GetParam(Params[i][0]).Value.StringValue.length == 0        && Params[i][2] == "default") || (Dwg.GetParam(Params[i][0]).Value.StringValue.length > 0        && Params[i][3] == "default")) { Dwg.GetParam(Params[i][0]).Value = pfcCreate("MpfcModelItem").CreateStringParamValue(Params[i][4]);        Output += "<li>" + Params[i][0] + " : " + Params[i][4] + " (drw sync with default value)</li>"; } }
+                    //DRW PARAM SYNC FROM PRT
+                    if (Params[i][1] == "sync") {
+                        if (Dwg.GetParam(Params[i][0]).Value.StringValue != DwgModels.Item(0).GetParam(Params[i][0]).Value.StringValue) {
+                            Dwg.GetParam(Params[i][0]).Value = DwgModels.Item(0).GetParam(Params[i][0]).Value;
+                            Output += "<li>" + Params[i][0] + " : " + Dwg.GetParam(Params[i][0]).Value.StringValue + " (drw sync from submodel)</li>";
+                        }
                     }
                 }
+
             } else if (assembly != void null && part != void null) {
                 // DRW PARAM SYNC FROM MODEL AND SUBMODEL
                 var SubPrtModel = oSession.GetModel(modelsName,pfcCreate("pfcModelType").MDL_PART);
@@ -330,15 +441,18 @@
                     if (SubPrtModel.GetParam(Params[i][0]) == void null &&  Params[i][5] != "null")     { SubPrtModel.CreateParam(Params[i][0], createParamValueFromString("")); }
                     if (SubAsmModel.GetParam(Params[i][0]) == void null &&  Params[i][5] != "null")     { SubAsmModel.CreateParam(Params[i][0], createParamValueFromString("")); }
                     if (Dwg.GetParam(Params[i][0]) == void null         &&  Params[i][4] != "null")     { Dwg.CreateParam(Params[i][0], createParamValueFromString("")); }
-                    //Set Default Value
-                    if (Params[i][5] != "null" && SubPrtModel.GetParam(Params[i][0]).Value.StringValue != Params[i][5])  { if ((SubPrtModel.GetParam(Params[i][0]).Value.StringValue.length == 0    && Params[i][2] == "default") || (SubPrtModel.GetParam(Params[i][0]).Value.StringValue.length > 0    && Params[i][3] == "default"))  { SubPrtModel.GetParam(Params[i][0]).Value = pfcCreate("MpfcModelItem").CreateStringParamValue(Params[i][5]);    Output += "<li>" + Params[i][0] + " : " + Params[i][5] + " (prt sync with default value)</li>"; } }
-                    if (Params[i][5] != "null" && SubAsmModel.GetParam(Params[i][0]).Value.StringValue != Params[i][5])  { if ((SubAsmModel.GetParam(Params[i][0]).Value.StringValue.length == 0    && Params[i][2] == "default") || (SubAsmModel.GetParam(Params[i][0]).Value.StringValue.length > 0    && Params[i][3] == "default"))  { SubAsmModel.GetParam(Params[i][0]).Value = pfcCreate("MpfcModelItem").CreateStringParamValue(Params[i][5]);    Output += "<li>" + Params[i][0] + " : " + Params[i][5] + " (asm sync with default value)</li>"; } }
-                    if (Params[i][4] != "null" && Dwg.GetParam(Params[i][0]).Value.StringValue != Params[i][4])          { if ((Dwg.GetParam(Params[i][0]).Value.StringValue.length == 0            && Params[i][2] == "default") || (Dwg.GetParam(Params[i][0]).Value.StringValue.length > 0            && Params[i][3] == "default"))  { Dwg.GetParam(Params[i][0]).Value = pfcCreate("MpfcModelItem").CreateStringParamValue(Params[i][4]);            Output += "<li>" + Params[i][0] + " : " + Params[i][4] + " (drw sync with default value)</li>"; } }
-                    //DRW PARAM SYNC FROM PRT
-                    if (Params[i][1] == "sync") {
-                        if (Dwg.GetParam(Params[i][0]).Value.StringValue != SubPrtModel.GetParam(Params[i][0]).Value.StringValue) {
-                            Dwg.GetParam(Params[i][0]).Value = SubPrtModel.GetParam(Params[i][0]).Value;
-                            Output += "<li>" + Params[i][0] + " : " + Dwg.GetParam(Params[i][0]).Value.StringValue + " (drw sync from prt)</li>";
+
+                    if (Dwg.InstanceName.indexOf(modelsName) > -1) {
+                        //Set Default Value
+                        if (Params[i][5] != "null" && SubPrtModel.GetParam(Params[i][0]).Value.StringValue != Params[i][5])  { if ((SubPrtModel.GetParam(Params[i][0]).Value.StringValue.length == 0    && Params[i][2] == "default") || (SubPrtModel.GetParam(Params[i][0]).Value.StringValue.length > 0    && Params[i][3] == "default"))  { SubPrtModel.GetParam(Params[i][0]).Value = pfcCreate("MpfcModelItem").CreateStringParamValue(Params[i][5]);    Output += "<li>" + Params[i][0] + " : " + Params[i][5] + " (prt sync with default value)</li>"; } }
+                        if (Params[i][5] != "null" && SubAsmModel.GetParam(Params[i][0]).Value.StringValue != Params[i][5])  { if ((SubAsmModel.GetParam(Params[i][0]).Value.StringValue.length == 0    && Params[i][2] == "default") || (SubAsmModel.GetParam(Params[i][0]).Value.StringValue.length > 0    && Params[i][3] == "default"))  { SubAsmModel.GetParam(Params[i][0]).Value = pfcCreate("MpfcModelItem").CreateStringParamValue(Params[i][5]);    Output += "<li>" + Params[i][0] + " : " + Params[i][5] + " (asm sync with default value)</li>"; } }
+                        if (Params[i][4] != "null" && Dwg.GetParam(Params[i][0]).Value.StringValue != Params[i][4])          { if ((Dwg.GetParam(Params[i][0]).Value.StringValue.length == 0            && Params[i][2] == "default") || (Dwg.GetParam(Params[i][0]).Value.StringValue.length > 0            && Params[i][3] == "default"))  { Dwg.GetParam(Params[i][0]).Value = pfcCreate("MpfcModelItem").CreateStringParamValue(Params[i][4]);            Output += "<li>" + Params[i][0] + " : " + Params[i][4] + " (drw sync with default value)</li>"; } }
+                        //DRW PARAM SYNC FROM PRT
+                        if (Params[i][1] == "sync") {
+                            if (Dwg.GetParam(Params[i][0]).Value.StringValue != SubPrtModel.GetParam(Params[i][0]).Value.StringValue) {
+                                Dwg.GetParam(Params[i][0]).Value = SubPrtModel.GetParam(Params[i][0]).Value;
+                                Output += "<li>" + Params[i][0] + " : " + Dwg.GetParam(Params[i][0]).Value.StringValue + " (drw sync from prt)</li>";
+                            }
                         }
                     }
                     //ASM PARAM SYNC FROM PRT
@@ -354,26 +468,30 @@
                     return false;
                 }
             }
-        } else {
+        /*} else {
             warning.innerHTML += "Drawing and Model do not have the same name. Parameter need to be set manually<br />";
             document.getElementById("fieldset1").style.border = "2px solid red";
             return false;
-        }
+        }*/
 
         WarningMsg(Params[i][0]);
+
         if (Params[i][1] != "sync" && Params[i][5] != "null") {
             outputTable += "<tr class='" + "odd" +"'><td class='odd1'>" + Params[i][0] + "</td><td>";
             if (Params[i][4].length) { outputTable += "<button type='button' class='button' id='Input_Drw' onclick='UpdateValue(this.name,this.value,this.id,this.type)' name ='" + Params[i][0] + "' value='" + Params[i][4] + "'>"+ Params[i][4] +"</button><br>"; }
-            if (Params[i][5].length) { outputTable += "<button type='button' class='button' id='Input_Models' onclick='UpdateValue(this.name,this.value,this.id,this.type)' name ='" + Params[i][0] + "' value='" + Params[i][5] + "'>"+ Params[i][5] +"</button>"; }
-            outputTable += "</td><td colspan='2' rowspan='1'><input type='text' id='Input_Drw' onkeypress='handleKeyPress(event,this.name,this.value,this.id)' onChange='UpdateValue(this.name,this.value,this.id)' name ='" + Params[i][0] + "' value='" + Dwg.GetParam(Params[i][0]).Value.StringValue + "' ></input>";
-            outputTable += "<input type='text' id='Input_Models' onChange='UpdateValue(this.name,this.value,this.id)' name ='" + Params[i][0] + "' value='" + oSession.GetModel(modelsName,pfcCreate("pfcModelType").MDL_PART).GetParam(Params[i][0]).Value.StringValue + "' ></input></td></tr>";
+            if (Dwg.InstanceName.indexOf(modelsName) > -1 && assembly != void null && part != void null) {
+                if (Params[i][5].length) { outputTable += "<button type='button' class='button' id='Input_Models' onclick='UpdateValue(this.name,this.value,this.id,this.type)' name ='" + Params[i][0] + "' value='" + Params[i][5] + "'>"+ Params[i][5] +"</button>"; }
+            }
+                outputTable += "</td><td colspan='3' rowspan='1'><input type='text' id='Input_Drw' onkeypress='handleKeyPress(event,this.name,this.value,this.id)' onChange='UpdateValue(this.name,this.value,this.id)' name ='" + Params[i][0] + "' value='" + Dwg.GetParam(Params[i][0]).Value.StringValue + "' ></input>";
+            if (Dwg.InstanceName.indexOf(modelsName) > -1 && assembly != void null && part != void null) {
+                outputTable += "<input type='text' id='Input_Models' onChange='UpdateValue(this.name,this.value,this.id)' name ='" + Params[i][0] + "' value='" + oSession.GetModel(modelsName,pfcCreate("pfcModelType").MDL_PART).GetParam(Params[i][0]).Value.StringValue + "' ></input></td></tr>";
+            }
         } else {
             if (Params[i][4].length) { outputTable += "<tr class='" + "odd" +"'><td class='odd1'>" + Params[i][0] + "</td>"; }
             else { outputTable += "<tr class='" + "odd" +"'><td class='odd1' colspan='2' rowspan='1'>" + Params[i][0] + "</td>"; }
             if (Params[i][4].length) { outputTable += "<td><button type='button' id='Input_Drw' onclick='UpdateValue(this.name,this.value,this.id,this.type)' name ='" + Params[i][0] + "' value='" + Params[i][4] + "'>"+ Params[i][4] +"</button></td>"; }
-            outputTable += "<td colspan='2' rowspan='1'><input type='text' id='Input_"+Params[i][1]+"' onkeypress='handleKeyPress(event,this.name,this.value,this.id)' onChange='UpdateValue(this.name,this.value,this.id)' name ='" + Params[i][0] + "' value='" + Dwg.GetParam(Params[i][0]).Value.StringValue + "' ></input></td></tr>";
+            outputTable += "<td colspan='3' rowspan='1'><input type='text' id='Input_"+Params[i][1]+"' onkeypress='handleKeyPress(event,this.name,this.value,this.id)' onChange='UpdateValue(this.name,this.value,this.id)' name ='" + Params[i][0] + "' value='" + Dwg.GetParam(Params[i][0]).Value.StringValue + "' ></input></td></tr>";
         }
-        
         return true;
     }
 
@@ -389,7 +507,8 @@
 
     function ReWriteTable() {
         //Parent PRT Session ID
-        var SID=oSession.GetModel(modelsName,pfcCreate("pfcModelType").MDL_PART).RelationId;
+        //var SID=oSession.GetModel(modelsName,pfcCreate("pfcModelType").MDL_PART).RelationId;
+        var SID=part.RelationId;
 
         var tables = Dwg.ListTables();
         for (var j=0; j<tables.Count; j++)
@@ -398,7 +517,9 @@
 
             //Build a matrix containing the values for the table
             var nTableRows = table.GetRowCount();
-            var nTableCols = table.GetColumnCount();
+            // For Fast Analysis
+            //var nTableCols = table.GetColumnCount();
+            var nTableCols = 1;
 
             //Loop around the table and dump information to excel
             for (k=0;k<nTableRows;k++)
@@ -464,6 +585,8 @@
                                     if (FindCellText(table, Cell, "Material 3")) { if(!FindCellText(table, CellPramMat, "&SE_MATERIAL_3:"+SID)) { ModifyCellText(table, CellPramMat, " &SE_MATERIAL_3:"+SID, 2.1, "font"); Output += "<li>SE_MATERIAL_3" + " : " + "SE_MATERIAL_3:"+SID + "</li>"; } }
                                     if (FindCellText(table, Cell, "Treatment 1")) { if(!FindCellText(table, CellPramMat, "&SE_TREATMENT_1:"+SID)) { ModifyCellText(table, CellPramMat, " &SE_TREATMENT_1:"+SID, 2.1, "font"); Output += "<li>SE_TREATMENT_1" + " : " + "SE_TREATMENT_1:"+SID + "</li>"; } }
                                     if (FindCellText(table, Cell, "Treatment 2")) { if(!FindCellText(table, CellPramMat, "&SE_TREATMENT_2:"+SID)) { ModifyCellText(table, CellPramMat, " &SE_TREATMENT_2:"+SID, 2.1, "font"); Output += "<li>SE_TREATMENT_2" + " : " + "SE_TREATMENT_2:"+SID + "</li>"; } }
+                                    // For Fast Analysis
+                                    if (FindCellText(table, Cell, "Treatment 2")) { return; }
                                 }
                             }
                         }
@@ -887,10 +1010,12 @@
         if (DwgParam.indexOf("SE_DESCRIPTION_LOCAL") > -1 || DwgParam.indexOf("SE_NOTE") > -1) return true
 
         if (DwgParam.indexOf("SE_MATERIAL") > -1 || DwgParam.indexOf("SE_TREATMENT") > -1) {
-            if (oSession.GetModel(part.InstanceName,pfcCreate("pfcModelType").MDL_PART).GetParam(DwgParam).Value.StringValue.length == 0 || oSession.GetModel(part.InstanceName,pfcCreate("pfcModelType").MDL_PART).GetParam(DwgParam).Value.StringValue.indexOf("undef") > -1) {
-                warning.innerHTML += DwgParam + " not specified<br />";
-                document.getElementById("fieldset1").style.border = "2px solid red";
-                document.getElementById("warning").style.color = "red";
+            if (part != void null) {
+                if (oSession.GetModel(part.InstanceName,pfcCreate("pfcModelType").MDL_PART).GetParam(DwgParam).Value.StringValue.length == 0 || oSession.GetModel(part.InstanceName,pfcCreate("pfcModelType").MDL_PART).GetParam(DwgParam).Value.StringValue.indexOf("undef") > -1) {
+                    warning.innerHTML += DwgParam + " not specified<br />";
+                    document.getElementById("fieldset1").style.border = "2px solid red";
+                    document.getElementById("warning").style.color = "red";
+                }
             }
         } else if (Dwg.GetParam(DwgParam).Value.StringValue.length == 0) {
             warning.innerHTML += DwgParam + " not specified<br />";
@@ -898,7 +1023,7 @@
             document.getElementById("warning").style.color = "red";
         }
     }
-    
+
     function handleKeyPress(e,name,value,id) {
         var key=e.keyCode || e.which;
         if (key==13) {
@@ -936,10 +1061,10 @@
         oSession.RunMacro("~ Command `ProCmdDwgUpdateSheets`");
         oSession.RunMacro("~ Command `ProCmdDwgTblRegUpd`");
         oSession.CurrentWindow.Repaint();
-        
+
         if (type == "button") location.reload();
     }
-    
+
     function DefaultValue(source,target) {
         //document.getElementById(target).value = document.getElementById(source).value;
         document.getElementsByClassName(target).value = document.getElementsByClassName(source).value;
@@ -957,7 +1082,7 @@
         var matFileName;
         var matName = s[s.selectedIndex].value.toLowerCase();
         if (matName == void null || matName == "" || matName.toUpperCase() == "UNDEF") matName = "undef";
-        
+
         var matNames = pfcCreate ("stringseq");
 		matNames.set (0, matName.toLowerCase() + ".mtl");
         matNames.set (1, matName.toUpperCase() + ".MTL");
@@ -1033,8 +1158,171 @@
         }
     }
 
-    // mdlDescr.SetPath(workdir);
+    function Export () {
+        CreateSTEP();
+        CreatePDF();
+        CreateDXF();
+    }
+
+    function CreatePDF () {
+        try {
+            var drwRev = Dwg.GetParam("SE_REVISION").Value.StringValue;
+            var modelRev = DwgModels.Item(0).GetParam("SE_REVISION").Value.StringValue;
+            //var pdfName = Dwg.Descr.GetFullName().toLowerCase()+"_REV"+drwRev+".pdf";
+            var pdfDir = GetUserDir("");
+            var str = Dwg.Descr.GetFullName();
+            // var pdfName = pdfDir+Dwg.Descr.GetFullName().toLowerCase()+modelRev.toUpperCase()+"_REV"+drwRev+".stp";
+            if (DrawingRev == ModelsRev || drwRev == modelRev)
+                    { var pdfName = pdfDir+Dwg.Descr.GetFullName().toLowerCase()+"_REV"+drwRev+".pdf"; }
+            else if (Dwg.Descr.GetFullName().lastIndexOf(modelRev) > -1 && Dwg.Descr.GetFullName().length - Dwg.Descr.GetFullName().lastIndexOf(modelRev) == 1)
+                    { var pdfName = pdfDir+Dwg.Descr.GetFullName().toLowerCase()+"_REV"+drwRev+".pdf"; }
+            else    { var pdfName = pdfDir+Dwg.Descr.GetFullName().toLowerCase()+modelRev.toUpperCase()+"_REV"+drwRev+".pdf"; }
+
+            //create options
+            var myOptions = pfcCreate ("pfcPDFOptions");
+
+                var pdfColor = pfcCreate ("pfcPDFOption").Create();
+                    pdfColor.OptionType = (pfcCreate ("pfcPDFOptionType").PDFOPT_COLOR_DEPTH);
+                var colorSet = pfcCreate ("pfcPDFColorDepth").PDF_CD_COLOR;
+                var pdfArg = pfcCreate ("MpfcArgument").CreateIntArgValue(colorSet);
+                    pdfColor.OptionValue=(pdfArg);
+            myOptions.Append(pdfColor);
+
+            var pdfInstructions = pfcCreate ("pfcPDFExportInstructions");
+            var inst = pdfInstructions.Create();
+            inst.Options = myOptions;
+
+            Dwg.Export(pdfName, inst);
+            
+            //Clear log files
+            ClearLogFiles();
+            
+            exportName = pdfName;
+            
+        } catch (e) {
+            alert("Can\'t create PDF file");
+        }
+    }
+
+    function CreateSTEP () {
+        try {
+            var drwRev = Dwg.GetParam("SE_REVISION").Value.StringValue;
+            var modelRev = DwgModels.Item(0).GetParam("SE_REVISION").Value.StringValue;
+            //var stepName = Dwg.Descr.GetFullName().toLowerCase()+"_REV"+drwRev+".stp";
+            var stepDir = GetUserDir("");
+            // var stepName = stepDir+DwgModels.Item(0).Descr.GetFullName().toLowerCase()+modelRev.toUpperCase()+"_REV"+drwRev+".stp";
+            if (DrawingRev == ModelsRev || drwRev == modelRev)
+                    { var stepName = stepDir+DwgModels.Item(0).Descr.GetFullName().toUpperCase()+"_REV"+drwRev+".stp"; }
+            else if (DwgModels.Item(0).Descr.GetFullName().lastIndexOf(modelRev) > -1 && DwgModels.Item(0).Descr.GetFullName().length - DwgModels.Item(0).Descr.GetFullName().lastIndexOf(modelRev) == 1)
+                    { var stepName = stepDir+DwgModels.Item(0).Descr.GetFullName().toLowerCase()+"_REV"+drwRev+".stp"; }
+            else    { var stepName = stepDir+DwgModels.Item(0).Descr.GetFullName().toLowerCase()+modelRev.toUpperCase()+"_REV"+drwRev+".stp"; }
+
+            //if (model name != drw name) -> Drawing name +_REV+ drawing rev +.stp
+            //if (model name == drw name) -> Model name + modelRev +_REV+ drawing rev +.stp
+
+            //create options
+            var GeometryFlags = new pfcCreate ("pfcGeometryFlags").Create();
+            GeometryFlags.AsQuilts = false;
+            GeometryFlags.AsSolids = true;
+            GeometryFlags.AsSurfaces = false;
+            GeometryFlags.AsWireframe = false;
+
+            var modelExport = new pfcCreate("pfcAssemblyConfiguration").EXPORT_ASM_SINGLE_FILE;
+            var stepInstructions = pfcCreate ("pfcSTEP3DExportInstructions");
+            var inst = stepInstructions.Create(modelExport,GeometryFlags);
+
+            DwgModels.Item(0).Export(stepName, inst);
+            
+            //Clear log files
+            ClearLogFiles();
+            
+            exportName = stepName;
+            
+        } catch (e) {
+            alert("Can\'t create STEP file");
+        }
+    }
+
+    function CreateDXF () {
+        try {
+            var drwRev = Dwg.GetParam("SE_REVISION").Value.StringValue;
+            var modelRev = DwgModels.Item(0).GetParam("SE_REVISION").Value.StringValue;
+            //var stepName = Dwg.Descr.GetFullName().toLowerCase()+"_REV"+drwRev+".stp";
+            var dxfDir = GetUserDir("");
+            var dxfName;
+            
+            var dxfInstructions = pfcCreate ("pfcDXFExportInstructions");
+            var inst = dxfInstructions.Create();
+
+            var Export2DOption = pfcCreate ("pfcExport2DOption").Create();
+                
+            for (i=0;i<Dwg.NumberOfSheets;i++) {
+                Dwg.CurrentSheetNumber = parseInt(i+1);
+                
+                // dxfName = dxfDir+DwgModels.Item(0).Descr.GetFullName().toLowerCase()+modelRev.toUpperCase()+"_"+parseInt(i+1)+"_REV"+drwRev+".dxf";
+                if (DrawingRev == ModelsRev || drwRev == modelRev)
+                        { dxfName = dxfDir+DwgModels.Item(0).Descr.GetFullName().toLowerCase()+"_"+parseInt(i+1)+"_REV"+drwRev+".dxf"; }
+                else if (DwgModels.Item(0).Descr.GetFullName().lastIndexOf(modelRev) > -1 && DwgModels.Item(0).Descr.GetFullName().length - DwgModels.Item(0).Descr.GetFullName().lastIndexOf(modelRev) == 1)
+                        { var dxfName = dxfDir+DwgModels.Item(0).Descr.GetFullName().toLowerCase()+"_"+parseInt(i+1)+"_REV"+"_REV"+drwRev+".dxf"; }
+                else    { dxfName = dxfDir+DwgModels.Item(0).Descr.GetFullName().toLowerCase()+modelRev.toUpperCase()+"_"+parseInt(i+1)+"_REV"+drwRev+".dxf"; }
+                /*
+                var Export2DOption = pfcCreate ("pfcExport2DOption").Create();
+                Export2DOption.ExportSheetOption  = pfcCreate ("pfcExport2DSheetOption").EXPORT_SELECTED;
+                Export2DOption.ModelSpaceSheet  = parseInt(i+1);
+                //Dwg.Export2DOption; ????
+                */
+                Dwg.Export(dxfName, inst);
+                
+                if (i==0) { exportName = dxfName; }
+            }
+            Dwg.CurrentSheetNumber = parseInt(1);
+            
+            //Clear log files
+            ClearLogFiles();
+
+        } catch (e) {
+            alert("Can\'t create DXF file");
+        }
+
+    }
     
+    function OpenExportDirectory()
+    {
+        ClearLogFiles();
+        
+        try {
+            var wshell = new ActiveXObject("WScript.Shell");
+
+            if (exportName != void null) {
+                wshell.Exec("explorer.exe"+" /select,"+exportName);
+            } else {
+                wshell.Exec("explorer.exe"+" "+GetUserDir(""));
+            }
+        } catch(e) { }
+    }
+    
+    function ClearLogFiles()
+    {
+        try {
+            var fso = new ActiveXObject("Scripting.FileSystemObject");
+            fso.DeleteFile(GetUserDir("")+"\*_out.log.*");
+        } catch(e) { }
+    }
+
+    function GetUserDir(subdir)
+    {
+        try {
+            var wshell = new ActiveXObject("WScript.Shell");
+            var homeDir = wshell.ExpandEnvironmentStrings("%USERPROFILE%");
+            var documentDir = homeDir+"\\"+subdir;
+            return documentDir;
+        } catch (e) {
+            return "";
+        }
+    }
+
+    // mdlDescr.SetPath(workdir);
+
     // Snippet code (uses functions from pfcUtils.js) :
     // Import drawing options
     /*
@@ -1042,7 +1330,7 @@
       var session = pfcCreate("MpfcCOMGlobal").GetProESession();
       var mdl = session.CurrentModel;
       try {
-     
+
       var dtl_inst =  pfcCreate("pfcDWGSetupImportInstructions").Create();
       mdl.Import("test.dtl", dtl_inst);
       }
