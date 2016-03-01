@@ -477,20 +477,33 @@
         WarningMsg(Params[i][0]);
 
         if (Params[i][1] != "sync" && Params[i][5] != "null") {
-            outputTable += "<tr class='" + "odd" +"'><td class='odd1'>" + Params[i][0] + "</td><td>";
-            if (Params[i][4].length) { outputTable += "<button type='button' class='button' id='Input_Drw' onclick='UpdateValue(this.name,this.value,this.id,this.type)' name ='" + Params[i][0] + "' value='" + Params[i][4] + "'>"+ Params[i][4] +"</button><br>"; }
+            //SE Rev Desync management only
+                outputTable += "<tr class='" + "odd" +"'><td class='odd1'>" + Params[i][0] + "</td><td>";
+                
+            if (Params[i][4].length) {
+                outputTable += "<button type='button' class='button' id='Input_Drw' onclick='UpdateValue(this.name,this.value,this.id,this.type)' name ='" + Params[i][0] + "' value='" + Params[i][4] + "'>"+ Params[i][4] +"</button><br>"; }
+                
             if (Dwg.InstanceName.indexOf(modelsName) > -1 && assembly != void null && part != void null) {
-                if (Params[i][5].length) { outputTable += "<button type='button' class='button' id='Input_Models' onclick='UpdateValue(this.name,this.value,this.id,this.type)' name ='" + Params[i][0] + "' value='" + Params[i][5] + "'>"+ Params[i][5] +"</button>"; }
+                if (Params[i][5].length) {
+                outputTable += "<button type='button' class='button' id='Input_Models' onclick='UpdateValue(this.name,this.value,this.id,this.type)' name ='" + Params[i][0] + "' value='" + Params[i][5] + "'>"+ Params[i][5] +"</button>"; }
             }
+            
                 outputTable += "</td><td colspan='3' rowspan='1'><input type='text' id='Input_Drw' onkeypress='handleKeyPress(event,this.name,this.value,this.id)' onChange='UpdateValue(this.name,this.value,this.id)' name ='" + Params[i][0] + "' value='" + Dwg.GetParam(Params[i][0]).Value.StringValue + "' ></input>";
+                
             if (Dwg.InstanceName.indexOf(modelsName) > -1 && assembly != void null && part != void null) {
                 outputTable += "<input type='text' id='Input_Models' onChange='UpdateValue(this.name,this.value,this.id)' name ='" + Params[i][0] + "' value='" + oSession.GetModel(modelsName,pfcCreate("pfcModelType").MDL_PART).GetParam(Params[i][0]).Value.StringValue + "' ></input></td></tr>";
             }
         } else {
-            if (Params[i][4].length) { outputTable += "<tr class='" + "odd" +"'><td class='odd1'>" + Params[i][0] + "</td>"; }
-            else { outputTable += "<tr class='" + "odd" +"'><td class='odd1' colspan='2' rowspan='1'>" + Params[i][0] + "</td>"; }
-            if (Params[i][4].length) { outputTable += "<td><button type='button' id='Input_Drw' onclick='UpdateValue(this.name,this.value,this.id,this.type)' name ='" + Params[i][0] + "' value='" + Params[i][4] + "'>"+ Params[i][4] +"</button></td>"; }
-            outputTable += "<td colspan='3' rowspan='1'><input type='text' id='Input_"+Params[i][1]+"' onkeypress='handleKeyPress(event,this.name,this.value,this.id)' onChange='UpdateValue(this.name,this.value,this.id)' name ='" + Params[i][0] + "' value='" + Dwg.GetParam(Params[i][0]).Value.StringValue + "' ></input></td></tr>";
+            //all SE management
+            if (Params[i][4].length) {
+                outputTable += "<tr class='" + "odd" +"'><td class='odd1'>" + Params[i][0] + "</td>"; }
+            else {
+                outputTable += "<tr class='" + "odd" +"'><td class='odd1' colspan='2' rowspan='1'>" + Params[i][0] + "</td>"; }
+            
+            if (Params[i][4].length) {
+                outputTable += "<td><button type='button' id='Input_Drw' onclick='UpdateValue(this.name,this.value,this.id,this.type)' name ='" + Params[i][0] + "' value='" + Params[i][4] + "'>"+ Params[i][4] +"</button></td>"; }
+                
+                outputTable += "<td colspan='3' rowspan='1'><input type='text' id='Input_"+Params[i][1]+"' onkeypress='handleKeyPress(event,this.name,this.value,this.id)' onChange='UpdateValue(this.name,this.value,this.id)' name ='" + Params[i][0] + "' value='" + Dwg.GetParam(Params[i][0]).Value.StringValue + "' ></input></td></tr>";
         }
         return true;
     }
@@ -1035,26 +1048,26 @@
         var SubPrtModel = oSession.GetModel(Dwg.InstanceName,pfcCreate("pfcModelType").MDL_PART);
         var SubAsmModel = oSession.GetModel(Dwg.InstanceName,pfcCreate("pfcModelType").MDL_ASSEMBLY);
 
-        if (id == "Input_Sync" || id == "Input_sync" || id == "Input_Models") {
-            if (SubPrtModel != void null) {
+        if (id.toLowerCase() == "input_sync" || id.toLowerCase() == "input_models" || id.toLowerCase() == "input_drw") {
+            if (part != void null) {
                 //Create PRT Param if not found
-                if (SubPrtModel.GetParam(name) == void null)    { SubPrtModel.CreateParam(name, createParamValueFromString("")); }
+                if (part.GetParam(name) == void null)       { part.CreateParam(name, createParamValueFromString("")); }
                 //Set new value
-                SubPrtModel.GetParam(name).Value =  pfcCreate("MpfcModelItem").CreateStringParamValue(value);
+                part.GetParam(name).Value =                 pfcCreate("MpfcModelItem").CreateStringParamValue(value);
             }
-            if (SubAsmModel != void null) {
+            if (assembly != void null) {
                 //Create ASM Param if not found
-                if (SubAsmModel.GetParam(name) == void null)    { SubAsmModel.CreateParam(name, createParamValueFromString("")); }
+                if (assembly.GetParam(name) == void null)   { assembly.CreateParam(name, createParamValueFromString("")); }
                 //Set new value
-                SubAsmModel.GetParam(name).Value =  pfcCreate("MpfcModelItem").CreateStringParamValue(value);
+                assembly.GetParam(name).Value =             pfcCreate("MpfcModelItem").CreateStringParamValue(value);
             }
         }
-        if (id == "Input_NoSync" || id == "Input_Sync" || id == "Input_nosync" || id == "Input_sync" || id == "Input_Drw") {
+        if (id.toLowerCase() == "input_nosync" || id.toLowerCase() == "input_sync" || id.toLowerCase() == "input_drw") {
             if (Dwg != void null) {
                 //Create DRW Param if not found
-                if (Dwg.GetParam(name) == void null)            { Dwg.CreateParam(name, createParamValueFromString("")); }
+                if (Dwg.GetParam(name) == void null)        { Dwg.CreateParam(name, createParamValueFromString("")); }
                 //Set new value
-                Dwg.GetParam(name).Value =          pfcCreate("MpfcModelItem").CreateStringParamValue(value);
+                Dwg.GetParam(name).Value =                  pfcCreate("MpfcModelItem").CreateStringParamValue(value);
             }
         }
 
