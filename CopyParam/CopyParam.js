@@ -1,3 +1,6 @@
+// List des drawings avec passage au drawing suivant
+// Adjout de table des indices + preset
+
     //Provisional on=auto off=forced off
     var Provisional = "off"
 
@@ -977,7 +980,7 @@
 
             for (var j=0;j<part.PostRegenerationRelations.Count; j++)
             {
-                if (part.PostRegenerationRelations.item(j).indexOf("se_material_1=\"") > -1)    Found_se_material_1=1;
+                if (part.PostRegenerationRelations.item(j).indexOf("se_material_1=\"UNDEF-undef\"") > -1)    Found_se_material_1=1;
                 if (part.PostRegenerationRelations.item(j).indexOf("se_mass") > -1)             Found_se_mass=1;
                 if (part.PostRegenerationRelations.item(j).indexOf("se_volume") > -1)           Found_se_volume=1;
                 if (part.PostRegenerationRelations.item(j).indexOf("se_surface") > -1)          Found_se_surface=1;

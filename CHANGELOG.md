@@ -1,3 +1,9 @@
+## 0.8 (2016-03-04)
+
+Bugfixes:
+
+  - Fix part relation check
+
 ## 0.7 (2016-02-22)
 
 Features:
