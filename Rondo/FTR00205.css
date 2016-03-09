@@ -42,7 +42,7 @@ background-color: Red;
     filter: alpha(opacity=90); /* For IE8 and earlier */
 }
 table {
-	font-size: 12px;
+	font-size: 09px;
 	padding: 0px;
 	border-collapse: collapse;
 	width : 100%;
@@ -55,7 +55,8 @@ a:link {
 text-decoration: none;
 color: black;
 padding:0px;
-margin:5px;
+margin:2px;
+border:1px
 }
 a.ftr{
 color:white;}

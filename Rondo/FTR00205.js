@@ -2,8 +2,14 @@ var debug =  true;
 
 var mGlob = pfcCreate("MpfcCOMGlobal");
 var oSession = mGlob.GetProESession();
-var spnFTR00205 = new Array();
+var server = oSession.GetActiveServer();
 
+var fso1,fso2;
+var f1,f2;
+
+var arrayCache;
+
+var spnFTR00205 = new Array();
 spnFTR00205[0]= new Array("LENGTH",	"M2",	"M2.5",	"M3",				"M4",				"M5",				"M6",					"M8",				"M10");
 spnFTR00205[1]= new Array("3",				"r",		"r",		"oos",				"oos",				"oos",				"oos",					"oos",				"oos");
 spnFTR00205[2]= new Array("4",				"r",		"r",		"r",					"oos",				"oos",				"oos",					"oos",				"oos");
@@ -41,6 +47,18 @@ prtFTR00205[14]= new Array("",		"",		"",		"",					"",					"",					"hua2745201",	
 prtFTR00205[15]= new Array("",		"",		"",		"",					"",					"hua2286901",	"hua2789201",		"hua2284901",	"2162825401");
 prtFTR00205[16]= new Array("",		"",		"",		"",					"",					"",					"2162819501",		"hua2285001",		"");
 function Main(){
+    try {
+        // Browser window default size
+        var browserSize = oSession.CurrentWindow.GetBrowserSize();
+        if (browserSize > 35.0) {
+            browserSize = 35.0;
+            oSession.CurrentWindow.SetBrowserSize(0.0);
+            oSession.CurrentWindow.SetBrowserSize(browserSize);
+        }
+    } catch(e) {}
+    
+    InitSaveList();
+
 	var strOutputTable = "<table id='ftr00205'><thead><tr>";
 	for (var j=0; j < spnFTR00205[0].length; j++){
 		strOutputTable += "<th>" + spnFTR00205[0][j] + "</th>";
@@ -57,14 +75,17 @@ function Main(){
 				case "r":
 					// printDebug(i + "/" + j  + ": " +  spnFTR00205[i][j] + "| restricted");
 					strScrew += "<td class='restricted'>&nbsp;</td>";
+                    AddSaveList (spnFTR00205[i][j],"",(i*(spnFTR00205[i].length-1))-spnFTR00205[i].length+j,"","","");
 					break;
 				case "oos":
 					// printDebug(i + "/" + j  + ": " +  spnFTR00205[i][j] + "| out of scope");
 					strScrew += "<td class='outOfScope'>&nbsp;</td>";
+                    AddSaveList (spnFTR00205[i][j],"",(i*(spnFTR00205[i].length-1))-spnFTR00205[i].length+j,"","","");
 					break;
 				case "NPR":
 					// printDebug(i + "/" + j  + ": " +  spnFTR00205[i][j] + "| NPR");
 					strScrew += "<td>NPR</td>";
+                    AddSaveList (spnFTR00205[i][j],"",(i*(spnFTR00205[i].length-1))-spnFTR00205[i].length+j,"","","");
 					break;
 				default:
 					// printDebug(i + "/" + j  + ": " +  spnFTR00205[i][j] + "|" + spnFTR00205[i][j] );
@@ -72,9 +93,17 @@ function Main(){
 					if (j == 0 ){
 						strScrew += "<td>" + spnFTR00205[i][j] + "</td>";
 					} else {
-						checkWS(prtFTR00205[i][j]);
-						
-						strScrew += "<td><a href='wtpub://MDM Production/Libraries/Rondo_Library/Mechanical Components/Fasteners/Screw/General Screw Metric/" + prtFTR00205[i][j] + ".prt'>" + spnFTR00205[i][j] + "</a></td>";
+                        //alert(data[(i*(spnFTR00205[i].length-1))-spnFTR00205[i].length+j + 1] + ((i*(spnFTR00205[i].length-1))-spnFTR00205[i].length+j));
+                        arrayCache = data[(i*(spnFTR00205[i].length-1))-spnFTR00205[i].length+j + 1].toString().split("|");
+                        
+                        printDebug (arrayCache[0]);
+                        //alert(arrayCache);
+                        //wtPub = checkWS(prtFTR00205[i][j]);
+                        
+                        if (arrayCache[4].indexOf("wtpub") != -1) { wtPub = arrayCache[4]; }
+                        else { wtPub = checkWS(prtFTR00205[i][j]); }
+						strScrew += "<td><a class='draggable' se_part_number='"+spnFTR00205[i][j]+"' title='Description' href='"+wtPub+"'>" + spnFTR00205[i][j] + "</a></br><a href=''>&lt;info&gt;</a></td>";
+                        AddSaveList (spnFTR00205[i][j],prtFTR00205[i][j]+'.prt',(i*(spnFTR00205[i].length-1))-spnFTR00205[i].length+j,"Description",wtPub,"INFO");
 					}
 			}
 		}
@@ -82,24 +111,34 @@ function Main(){
 	}
 	strOutputTable+= "</tbody></table>";
 	document.getElementById('holesTable').innerHTML += strOutputTable;
+
+    SetDragDropEvents();
+
+    CloseSaveList();
 }
 
 function checkWS(strPRTName) {
-	server = oSession.GetActiveServer();
-	
-	try {
-		printDebug(server.GetActiveWorkspace());
-		var modelInWs = server.IsObjectCheckedOut(server.ActiveWorkspace,strPRTName + ".prt");
-		if (modelInWs != void null) {
-			printDebug ("in Ws: " + strPRTName);
-		}
-	}
-	catch (e) {
-		
-		// printDebug (e);
-		printDebug ("not in Ws: " + strPRTName);
-		
-	}
+    var wslink;
+
+    var aryPRTName = pfcCreate ("stringseq");
+    aryPRTName.set (0, strPRTName.toLowerCase() + ".prt");
+    aryPRTName.set (1, strPRTName.toUpperCase() + ".PRT");
+
+    for (i=0;i<2 && wslink==void null;i++) {
+        try {
+            //printDebug (aryPRTName.item(i));
+            wslink = server.GetAliasedUrl(aryPRTName.item(i));
+            // wslink = 'disabled';
+            //printDebug (wslink);
+        }
+        catch (e) { }
+    }
+
+    if (wslink == void null) {
+        printDebug ("wsLink not found: " + strPRTName);
+        return;
+    }
+    return wslink;
 }
 function printDebug(strOutput){
 	if (debug){
@@ -143,4 +182,137 @@ function pfcCreate (className) {
 		global_class_cache[className] = obj;
 	}
 	return obj;
+}
+
+function pfcGetProESession ()
+{
+	if (!isProEEmbeddedBrowser ())
+	{
+		throw new Error ("Not in embedded browser.  Aborting...");
+	}
+
+	// Security code
+	if (!pfcIsWindows())
+		netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+	var glob = pfcCreate ("MpfcCOMGlobal");
+	return glob.GetProESession();
+}
+
+/***********************************************************************************************
+ * If current model is an assembly, create a new parameter called LATEST_PART_NUMBER
+ * to temporary store related SE_PART_NUMBER of dragged URL
+ **********************************************************************************************/
+function handleDragStart (e) {
+	if(!e) {
+		var e = window.event;
+	}
+	if(!e.target){
+		e.target = e.srcElement;
+	}
+
+	latest_se_part_number = e.target.se_part_number
+	if (!pfcIsWindows())
+		netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+	session = pfcGetProESession ();
+	mdl = session.getActiveModel();
+	if (mdl) {
+		mdl_type = mdl.Type;
+		assy_type = pfcCreate("pfcModelType").MDL_ASSEMBLY
+
+		if (mdl_type == assy_type) {
+			param1 = pfcCreate ("MpfcModelItem").CreateStringParamValue(latest_se_part_number);
+			p = mdl.GetParam("LATEST_PART_NUMBER");
+			if (p) {
+				// Update parameter
+				p.Value = param1;
+			} else {
+				// Create parameter
+				mdl.CreateParam("LATEST_PART_NUMBER", param1 );
+			}
+		}
+	}
+}
+
+/***********************************************************************************************
+ * Search all "draggable" objects
+ * Associate a startdrag event to each
+ **********************************************************************************************/
+function SetDragDropEvents () {
+	strout = ""
+
+	if (document.getElementsByTagName) {
+		elems = document.getElementsByTagName('*')
+
+		cnt = 0
+		for (i in elems) {
+			if (elems[i] && elems[i].className) {
+				strout = strout  + "\n" + elems[i].className
+				if (elems[i].className == "draggable") {
+					cnt = cnt+1
+					// Register events
+					draggable_url = elems[i]
+
+					// Tricky code to handle IE8 proprietary event mechanism
+					if (draggable_url.addEventListener) {
+						// TO DO
+						// toto.addEventListener('dragstart', handleDragStart, false);
+					} else {
+						draggable_url.attachEvent("ondragstart", function f(draggable_url) {handleDragStart(draggable_url)});
+					}
+				}
+
+			}
+		}
+	}
+}
+
+function InitSaveList () {
+
+// HUA42020|nve4938500.prt|null|SCREW CS HXL SK M6 X 20 STL|wtpub://MDM Production/Libraries/Rondo_Library/Mechanical Components/Fasteners/Screw/General Screw Metric/nve4938500.prt|http://pfrxiri10.fr.schneider-electric.com/MDM/servlet/WindchillAuthGW/wt.enterprise.URLProcessor/URLTemplateAction?action=ObjProps&oid=OR%3Awt.epm.EPMDocument%3A2305292731&u8=1
+// V12130015|v1213001501.prt|null|MSC HXG HD ISO4017 M12X45 8.8 Zn|wtpub://MDM Production/Libraries/Rondo_Library/Mechanical Components/Fasteners/Screw/General Screw Metric/v1213001501.prt|http://pfrxiri10.fr.schneider-electric.com/MDM/servlet/WindchillAuthGW/wt.enterprise.URLProcessor/URLTemplateAction?action=ObjProps&oid=OR%3Awt.epm.EPMDocument%3A1848552405&u8=1
+
+    try {
+        fso1 = new ActiveXObject("Scripting.FileSystemObject");
+        f1 = fso1.OpenTextFile("FTR00205List.lst", 1);
+        cache = f1.ReadAll();
+        f1.Close();
+        
+    
+        data = $.csv.toArrays(cache);
+        //printDebug(data[0]);
+        
+        f1 = fso1.GetFile("FTR00205List.lst");
+        f1.Delete();
+    } catch(e) {
+        alert(e);
+    }
+    
+    try {
+        fso2 = new ActiveXObject("Scripting.FileSystemObject");
+        f2 = fso2.CreateTextFile("FTR00205List.lst", true);
+        f2.WriteLine('Schneider Item No.;partNumber;description;file from delete row');
+    }  catch(e) {
+        alert(e);
+    }
+            
+}
+
+function AddSaveList (SPN,PART,CHECKED,DESC,WTPUB,INFO) {
+    //alert(SPN + '|' + PART + '|' + CHECKED + '|' + DESC + '|' + WTPUB + '|' + INFO);
+    try {
+        f2.WriteLine (SPN + '|' + PART + '|' + CHECKED + '|' + DESC + '|' + WTPUB + '|' + INFO);
+    } catch(e) {
+        printDebug (e);
+    }
+    
+}
+
+function CloseSaveList () {
+    try {
+        f2.Close();
+    } catch(e) {
+        printDebug (e);
+    }
 }
