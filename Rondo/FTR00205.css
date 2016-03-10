@@ -21,6 +21,9 @@ body {
 	bottom: 0;
 	left: 20px;
 }
+#UI {
+    font-size: 65%;
+}
 .odd {
 	background-color: #b9bab3;
 	font-size: 100%;

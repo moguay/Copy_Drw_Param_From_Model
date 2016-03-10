@@ -75,17 +75,17 @@ function Main(){
 				case "r":
 					// printDebug(i + "/" + j  + ": " +  spnFTR00205[i][j] + "| restricted");
 					strScrew += "<td class='restricted'>&nbsp;</td>";
-                    AddSaveList (spnFTR00205[i][j],"",(i*(spnFTR00205[i].length-1))-spnFTR00205[i].length+j,"","","");
+                    AddSaveList (spnFTR00205[i][j],"","","","","");
 					break;
 				case "oos":
 					// printDebug(i + "/" + j  + ": " +  spnFTR00205[i][j] + "| out of scope");
 					strScrew += "<td class='outOfScope'>&nbsp;</td>";
-                    AddSaveList (spnFTR00205[i][j],"",(i*(spnFTR00205[i].length-1))-spnFTR00205[i].length+j,"","","");
+                    AddSaveList (spnFTR00205[i][j],"","","","","");
 					break;
 				case "NPR":
 					// printDebug(i + "/" + j  + ": " +  spnFTR00205[i][j] + "| NPR");
 					strScrew += "<td>NPR</td>";
-                    AddSaveList (spnFTR00205[i][j],"",(i*(spnFTR00205[i].length-1))-spnFTR00205[i].length+j,"","","");
+                    AddSaveList (spnFTR00205[i][j],"","","","","");
 					break;
 				default:
 					// printDebug(i + "/" + j  + ": " +  spnFTR00205[i][j] + "|" + spnFTR00205[i][j] );
@@ -94,16 +94,28 @@ function Main(){
 						strScrew += "<td>" + spnFTR00205[i][j] + "</td>";
 					} else {
                         //alert(data[(i*(spnFTR00205[i].length-1))-spnFTR00205[i].length+j + 1] + ((i*(spnFTR00205[i].length-1))-spnFTR00205[i].length+j));
-                        arrayCache = data[(i*(spnFTR00205[i].length-1))-spnFTR00205[i].length+j + 1].toString().split("|");
+                        try {
+                            arrayCache = data[(i*(spnFTR00205[i].length-1))-spnFTR00205[i].length+j + 1].toString().split("|");
+                        } catch(e) {}
                         
-                        printDebug (arrayCache[0]);
+                        try {
+                            if (arrayCache[4].indexOf("wtpub") != -1) { var wtPub = arrayCache[4]; }
+                        } catch(e) {
+                            var wtPub = checkWS(prtFTR00205[i][j]); 
+                        }
+                        
+                        try {
+                            if (arrayCache[5].indexOf("http") != -1) { var infoURL = arrayCache[5]; }
+                        } catch(e) {
+                            var infoURL = oSession.GetUrlFromAliasedUrl(wtPub);
+                        }
+                        
+                        //printDebug (arrayCache[0]);
                         //alert(arrayCache);
                         //wtPub = checkWS(prtFTR00205[i][j]);
                         
-                        if (arrayCache[4].indexOf("wtpub") != -1) { wtPub = arrayCache[4]; }
-                        else { wtPub = checkWS(prtFTR00205[i][j]); }
-						strScrew += "<td><a class='draggable' se_part_number='"+spnFTR00205[i][j]+"' title='Description' href='"+wtPub+"'>" + spnFTR00205[i][j] + "</a></br><a href=''>&lt;info&gt;</a></td>";
-                        AddSaveList (spnFTR00205[i][j],prtFTR00205[i][j]+'.prt',(i*(spnFTR00205[i].length-1))-spnFTR00205[i].length+j,"Description",wtPub,"INFO");
+						strScrew += "<td><a class='draggable' se_part_number='"+spnFTR00205[i][j]+"' title='Description' href='"+wtPub+"'>" + spnFTR00205[i][j] + "</a></br><a href='"+infoURL+"'>&lt;info&gt;</a></td>";
+                        AddSaveList (spnFTR00205[i][j],prtFTR00205[i][j]+'.prt',"null","Description",wtPub,infoURL);
 					}
 			}
 		}
@@ -184,6 +196,16 @@ function pfcCreate (className) {
 	return obj;
 }
 
+//// LIB SPN
+
+function isProEEmbeddedBrowser ()
+{
+	if (top.external && top.external.ptc)
+		return true;
+	else
+		return false;
+}
+
 function pfcGetProESession ()
 {
 	if (!isProEEmbeddedBrowser ())
@@ -199,6 +221,22 @@ function pfcGetProESession ()
 	return glob.GetProESession();
 }
 
+function pfcGetExceptionType (err)
+{
+	if (pfcIsWindows())
+		return (err.description);
+	else
+	{
+		errString = err.message;
+		// This should remove the XPCOM prefix ("XPCR_C")
+		if (errString.search ("XPCR_C") == 0)
+			return (errString.substr(6));
+		else 
+			return (errString);
+	}
+}
+
+
 /***********************************************************************************************
  * If current model is an assembly, create a new parameter called LATEST_PART_NUMBER
  * to temporary store related SE_PART_NUMBER of dragged URL
@@ -212,6 +250,7 @@ function handleDragStart (e) {
 	}
 
 	latest_se_part_number = e.target.se_part_number
+
 	if (!pfcIsWindows())
 		netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
@@ -253,7 +292,7 @@ function SetDragDropEvents () {
 					cnt = cnt+1
 					// Register events
 					draggable_url = elems[i]
-
+					
 					// Tricky code to handle IE8 proprietary event mechanism
 					if (draggable_url.addEventListener) {
 						// TO DO
